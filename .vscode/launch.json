@@ -1,0 +1,54 @@
+{
+	"configurations": [
+		{
+			"name": "Debug strings",
+			"type": "cppdbg",
+			"request": "launch",
+			"args": [
+				"20",
+				" nostrud velit",
+				" reprehenderit sed",
+				"17",
+				"145",
+				" nostrud velit",
+				" reprehenderit sed"
+			],
+			"stopAtEntry": true,
+			"externalConsole": false,
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/build/string_test",
+			"additionalSOLibSearchPath": "/home/my5t3r10/Документы/SRC/testRepos/testRepo/src/build",
+			"MIMode": "gdb",
+			"miDebuggerPath": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"preLaunchTask": "Build"
+		},
+		{
+			"name": "Debug sprintf",
+			"type": "cppdbg",
+			"request": "launch",
+			"args": [],
+			"stopAtEntry": true,
+			"externalConsole": false,
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/build/sprintf_test",
+			"additionalSOLibSearchPath": "/home/my5t3r10/Документы/SRC/testRepos/testRepo/src/build",
+			"MIMode": "gdb",
+			"miDebuggerPath": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"preLaunchTask": "Build"
+		}
+	]
+}

@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"cs_string.h": "c",
+		"string_format.h": "c",
+		"s21_string.h": "c"
+	}
+}
