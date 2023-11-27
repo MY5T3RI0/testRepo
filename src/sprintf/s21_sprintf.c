@@ -386,11 +386,13 @@ size_t s21_itoa(long long num, char* str, int radix) {
     str[0] = '-';
     num *= -1;
   }
-
-  for (int i = 0; num != 0; i++) {
-    buff[i] = nums[num % radix];
-    num /= radix;
-  }
+  if (num == 0)
+    buff[0] = '0';
+  else
+    for (int i = 0; num != 0; i++) {
+      buff[i] = nums[num % radix];
+      num /= radix;
+    }
 
   size_t len = s21_strlen(buff);
 
@@ -414,4 +416,29 @@ size_t s21_utoa(unsigned long long num, char* str, int radix) {
   for (int i = 0; i < len; i++) str[i] = buff[len - i - 1];
 
   return len;
+}
+
+size_t s21_ftoa(long double num, char* str, int precision) {
+  long double x, y;
+  size_t res = 0;
+  if (num < 0) {
+    str[res++] = '-';
+    num *= -1;
+  }
+  y = modfl(num, &x);
+  char buff[25];
+
+  res += s21_itoa(x, &(str[res]), 10);
+  if (precision > 0) {
+    str[res++] = '.';
+    size_t float_size = s21_itoa(roundl(y * pow(10, precision)), buff, 10);
+    if (float_size < precision) {
+      s21_memset(&(str[res]), '0', precision - float_size);
+      res += precision - float_size;
+    }
+    s21_strncpy(&(str[res]), buff, float_size);
+    res += float_size;
+  }
+
+  return res;
 }

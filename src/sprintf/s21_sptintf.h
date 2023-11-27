@@ -22,6 +22,7 @@ void get_width(FORMAT *form, char *format, int *i, va_list arg);
 int s21_atoi(char *str);
 size_t s21_itoa(long long num, char *str, int radix);
 size_t s21_utoa(unsigned long long num, char *str, int radix);
+size_t s21_ftoa(long double num, char *str, int precision);
 void format_spec(char *str, FORMAT *form, va_list arg, int *j);
 int is_decimal(FORMAT *form);
 int is_float(FORMAT *form);
