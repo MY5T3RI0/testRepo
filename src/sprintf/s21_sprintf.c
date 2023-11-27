@@ -6,28 +6,214 @@ int sprintf(char* str, const char* format, ...) {
   va_start(arg, format);
 
   int i = 0;
+  int j = 0;
   for (; i < format_len; i++) {
     if (format[i] == '%')
-      i += handle_spec(str, format + i + 1, arg);
+      i += handle_spec(&str[j], format + i + 1, arg, &j);
     else
-      str[i] = format[i];
+      str[j++] = format[i];
   }
 
   va_end(arg);
   return i;
 }
 
-int handle_spec(char* str, const char* format, va_list arg) {
-  FORMAT form = (FORMAT){0, 0, 0, 0, 0};
+int handle_spec(char* str, const char* format, va_list arg, int* j) {
+  FORMAT form = (FORMAT){0, 0, 0, 0, 0, 0};
 
   int i = 0;
   get_flags(&form, (char*)&format[i], &i);
-  get_width(&form, (char*)&format[i], &i);
-  get_precision(&form, (char*)&format[i], &i);
+  get_width(&form, (char*)&format[i], &i, arg);
+  get_precision(&form, (char*)&format[i], &i, arg);
   get_len(&form, format[i], &i);
   get_specifier(&form, format[i], &i);
 
+  format_spec(str, &form, arg, j);
+
   return i;
+}
+
+void format_spec(char* str, FORMAT* form, va_list arg, int* j) {
+  if (form->specifier & spec_c) {
+    format_char(str, form, arg, j);
+  } else if (form->specifier & (spec_d | spec_i)) {
+    format_decimal(str, form, arg, j);
+  } else if (form->specifier & spec_u) {
+    format_unsigned(str, form, arg, j);
+  } else if (is_float(form)) {
+    // format_float();
+  } else if (is_nradix(form)) {
+    format_nradix(str, form, arg, j);
+  } else if (form->specifier & spec_s) {
+    format_string(str, form, arg, j);
+  } else if (form->specifier & spec_p) {
+    format_pointer(str, form, arg, j);
+  } else if (form->specifier & spec_percent) {
+    format_percent(str, j);
+  }
+}
+
+void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
+  int radix = 16;
+  int shift = 0;
+
+  if (form->specifier & spec_o) radix = 8;
+
+  unsigned long long num = va_arg(arg, unsigned long long);
+  if (form->len & len_h)
+    num = (unsigned short)num;
+  else if (form->len & len_l)
+    num = (unsigned long)num;
+  else if (!form->len)
+    num = (unsigned)num;
+
+  char* buff = malloc(25 * sizeof(char));
+  if (buff) {
+    int num_size = s21_utoa(num, buff, radix);
+    if (form->specifier & spec_X) buff = to_upper(buff);
+    int precision = num_size > form->precision ? num_size : form->precision;
+    int width = form->width - precision;
+    if (form->flags & flag_sharp) width -= radix / 8;
+
+    for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+      str[shift++] = ' ';
+
+    if (form->flags & flag_sharp) {
+      if (form->specifier & spec_o) {
+        s21_strncpy(&(str[shift]), "0", 1);
+        shift++;
+      } else if (form->specifier & spec_x) {
+        s21_strncpy(&(str[shift]), "0x", 2);
+        shift += 2;
+      } else if (form->specifier & spec_X) {
+        s21_strncpy(&(str[shift]), "0X", 2);
+        shift += 2;
+      }
+    }
+
+    for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+
+    s21_strncpy(&(str[shift]), buff, num_size);
+    if (buff) free(buff);
+    (*j) += num_size + shift;
+  }
+}
+
+void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
+  int shift = 0;
+
+  long long num = va_arg(arg, long long);
+  if (form->len & len_h)
+    num = (short)num;
+  else if (form->len & len_l)
+    num = (long)num;
+  else if (!form->len)
+    num = (int)num;
+
+  char buff[25];
+  int num_size = s21_itoa(num, buff, 10);
+  int precision = num_size > form->precision ? num_size : form->precision;
+  int width = form->width - precision;
+  if (form->flags & flag_plus || form->flags & flag_space) width--;
+
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
+  if (form->flags & flag_plus && num > 0)
+    str[shift++] = '+';
+  else if (form->flags & flag_space && num > 0)
+    str[shift++] = ' ';
+  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+
+  s21_strncpy(&(str[shift]), buff, num_size);
+  (*j) += num_size + shift;
+}
+
+void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
+  int shift = 0;
+
+  unsigned long long num = va_arg(arg, unsigned long long);
+  if (form->len & len_h)
+    num = (unsigned short)num;
+  else if (form->len & len_l)
+    num = (unsigned long)num;
+  else if (!form->len)
+    num = (unsigned)num;
+
+  char buff[25];
+  int num_size = s21_utoa(num, buff, 10);
+  int precision = num_size > form->precision ? num_size : form->precision;
+  int width = form->width - precision;
+
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
+
+  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+
+  s21_strncpy(&(str[shift]), buff, num_size);
+  (*j) += num_size + shift;
+}
+
+void format_pointer(char* str, FORMAT* form, va_list arg, int* j) {
+  int shift = 2;
+  s21_strncat(str, "0x", 2);
+  unsigned long num = va_arg(arg, unsigned long);
+  char buff[25];
+  int num_size = s21_utoa(num, buff, 16);
+
+  for (int i = 0;
+       i < form->width - num_size - shift && !(form->flags & flag_minus); i++)
+    str[shift++] = ' ';
+
+  for (int i = 0; i < num_size; i++) str[shift++] = buff[i];
+
+  (*j) += shift;
+}
+
+void format_char(char* str, FORMAT* form, va_list arg, int* j) {
+  int sym = va_arg(arg, int);
+  int shift = 0;
+  if (!(form->len & len_l)) sym = (char)sym;
+
+  for (int i = 0; i < form->width - shift && !(form->flags & flag_minus); i++)
+    str[shift++] = ' ';
+
+  str[shift++] = sym;
+  (*j) += shift;
+}
+
+void format_string(char* str, FORMAT* form, va_list arg, int* j) {
+  char* new_str = va_arg(arg, char*);
+  int shift = 0;
+  if (!(form->len & len_l)) new_str = (char*)new_str;
+  int precision = s21_strlen(new_str);
+  if (form->is_precision && s21_strlen(new_str) > form->precision)
+    precision = form->precision;
+
+  int width = form->width - precision;
+
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = ' ';
+
+  for (int i = 0; i < precision; i++) str[shift++] = new_str[i];
+
+  (*j) += shift;
+}
+
+void format_percent(char* str, int* j) {
+  str[0] = '%';
+  (*j)++;
+}
+
+int is_decimal(FORMAT* form) {
+  return form->specifier & (spec_d | spec_i | spec_u);
+}
+
+int is_float(FORMAT* form) {
+  return form->specifier & (spec_e | spec_E | spec_f | spec_g | spec_G);
+}
+
+int is_nradix(FORMAT* form) {
+  return form->specifier & (spec_o | spec_X | spec_x);
 }
 
 void get_len(FORMAT* form, char sym, int* i) {
@@ -132,34 +318,38 @@ void get_specifier(FORMAT* form, char sym, int* i) {
   }
 }
 
-void get_precision(FORMAT* form, char* format, int* i) {
+void get_precision(FORMAT* form, char* format, int* i, va_list arg) {
   if (format[0] == '.') {
-    if (format[1] == '*')
+    if (format[1] == '*') {
       *i += 2;
-    else {
+      form->precision = va_arg(arg, int);
+      form->is_precision = 1;
+    } else {
       char buff[25] = {0};
       int j = 0;
 
-      while (s21_strpbrk(&format[++j], "1234567890")) {
+      while (s21_strpbrk(&format[++j], NUMS_STR)) {
         buff[j - 1] = format[j];
       }
 
       int number = s21_atoi(buff);
       if (number >= 0) {
         form->precision = number;
+        form->is_precision = 1;
         *i += j;
       }
     }
   }
 }
 
-void get_width(FORMAT* form, char* format, int* i) {
-  if (format[0] == '*')
+void get_width(FORMAT* form, char* format, int* i, va_list arg) {
+  if (format[0] == '*') {
+    form->width = va_arg(arg, int);
     *i += 1;
-  else {
+  } else {
     char buff[25];
     int j = -1;
-    char nums[] = "1234567890";
+    char nums[] = NUMS_STR;
     while (s21_strchr(nums, format[++j])) {
       buff[j] = format[j];
     }
@@ -175,12 +365,53 @@ void get_width(FORMAT* form, char* format, int* i) {
 }
 
 int s21_atoi(char* str) {
-  size_t len = s21_strlen(str);
+  size_t len = s21_strspn(str, NUMS_STR);
   int res = 0;
+  int state = 1;
 
-  for (int i = len - 1; i >= 0; i--) {
-    res += (str[i] - '0') * pow(10, len - i - 1);
+  for (int i = 0; i < len && state; i++) {
+    if (str[i] < '0' || str[i] > '9')
+      state = 0;
+    else
+      res += (str[i] - '0') * pow(10, len - i - 1);
   }
 
   return res;
+}
+
+size_t s21_itoa(long long num, char* str, int radix) {
+  char buff[25] = {0};
+  char nums[] = "0123456789abcdef";
+  if (num < 0) {
+    str[0] = '-';
+    num *= -1;
+  }
+
+  for (int i = 0; num != 0; i++) {
+    buff[i] = nums[num % radix];
+    num /= radix;
+  }
+
+  size_t len = s21_strlen(buff);
+
+  for (int i = 0; i < len; i++)
+    str[str[0] == '-' ? i + 1 : i] = buff[len - i - 1];
+
+  return str[0] == '-' ? len + 1 : len;
+}
+
+size_t s21_utoa(unsigned long long num, char* str, int radix) {
+  char buff[25] = {0};
+  char nums[] = "0123456789abcdef";
+
+  for (int i = 0; num != 0; i++) {
+    buff[i] = nums[num % radix];
+    num /= radix;
+  }
+
+  size_t len = s21_strlen(buff);
+
+  for (int i = 0; i < len; i++) str[i] = buff[len - i - 1];
+
+  return len;
 }

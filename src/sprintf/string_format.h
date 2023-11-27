@@ -35,6 +35,7 @@ typedef struct string_format {
   int width;
   int precision;
   int len;
+  int is_precision;
 } FORMAT;
 
 #endif
