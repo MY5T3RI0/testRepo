@@ -1,2 +1,2 @@
-strtok_test
-o
+strerror_test
+Unknown error 145

@@ -36,5 +36,7 @@ void format_string(char *str, FORMAT *form, va_list arg, int *j);
 void format_percent(char *str, int *j);
 void format_float(char *str, FORMAT *form, va_list arg, int *j);
 char *upper(char *str);
+void remove_nulls(char *str);
+int g_selector(FORMAT *form, int p, int x);
 
 #endif
