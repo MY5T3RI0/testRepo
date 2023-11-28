@@ -41,7 +41,7 @@ void format_spec(char* str, FORMAT* form, va_list arg, int* j) {
   } else if (form->specifier & spec_u) {
     format_unsigned(str, form, arg, j);
   } else if (is_float(form)) {
-    // format_float();
+    format_float(str, form, arg, j);
   } else if (is_nradix(form)) {
     format_nradix(str, form, arg, j);
   } else if (form->specifier & spec_s) {
@@ -67,36 +67,60 @@ void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
   else if (!form->len)
     num = (unsigned)num;
 
-  char* buff = malloc(25 * sizeof(char));
-  if (buff) {
-    int num_size = s21_utoa(num, buff, radix);
-    if (form->specifier & spec_X) buff = to_upper(buff);
-    int precision = num_size > form->precision ? num_size : form->precision;
-    int width = form->width - precision;
-    if (form->flags & flag_sharp) width -= radix / 8;
+  char buff[25];
+  int num_size = s21_utoa(num, buff, radix);
+  if (form->specifier & spec_X) upper(buff);
+  int precision = num_size > form->precision ? num_size : form->precision;
+  int width = form->width - precision;
+  if (form->flags & flag_sharp) width -= radix / 8;
 
-    for (int i = 0; i < width && !(form->flags & flag_minus); i++)
-      str[shift++] = ' ';
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = ' ';
 
-    if (form->flags & flag_sharp) {
-      if (form->specifier & spec_o) {
-        s21_strncpy(&(str[shift]), "0", 1);
-        shift++;
-      } else if (form->specifier & spec_x) {
-        s21_strncpy(&(str[shift]), "0x", 2);
-        shift += 2;
-      } else if (form->specifier & spec_X) {
-        s21_strncpy(&(str[shift]), "0X", 2);
-        shift += 2;
-      }
+  if (form->flags & flag_sharp) {
+    if (form->specifier & spec_o) {
+      s21_strncpy(&(str[shift]), "0", 1);
+      shift++;
+    } else if (form->specifier & spec_x) {
+      s21_strncpy(&(str[shift]), "0x", 2);
+      shift += 2;
+    } else if (form->specifier & spec_X) {
+      s21_strncpy(&(str[shift]), "0X", 2);
+      shift += 2;
     }
-
-    for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
-
-    s21_strncpy(&(str[shift]), buff, num_size);
-    if (buff) free(buff);
-    (*j) += num_size + shift;
   }
+
+  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+
+  s21_strncpy(&(str[shift]), buff, num_size);
+  (*j) += num_size + shift;
+}
+
+void format_float(char* str, FORMAT* form, va_list arg, int* j) {
+  int shift = 0;
+
+  double num = va_arg(arg, double);
+  if (!(form->len & len_L)) num = (double)num;
+
+  char buff[30];
+  int num_size = s21_ftoa(num, buff, form->is_precision ? form->precision : 6);
+  int precision = num_size > form->precision ? num_size : form->precision;
+  int width = form->width - precision;
+  if (form->flags & flag_plus || form->flags & flag_space) width--;
+
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
+  if (form->flags & flag_plus && num > 0)
+    str[shift++] = '+';
+  else if (form->flags & flag_space && num > 0)
+    str[shift++] = ' ';
+  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+
+  s21_strncpy(&(str[shift]), buff, num_size);
+  shift += num_size;
+  if (form->is_precision && form->flags & flag_sharp && form->precision == 0)
+    str[shift++] = '.';
+  (*j) += shift;
 }
 
 void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
@@ -122,7 +146,6 @@ void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
     str[shift++] = '+';
   else if (form->flags & flag_space && num > 0)
     str[shift++] = ' ';
-  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
   (*j) += num_size + shift;
@@ -441,4 +464,18 @@ size_t s21_ftoa(long double num, char* str, int precision) {
   }
 
   return res;
+}
+
+char* upper(char* str) {
+  if (!str) return NULL;
+  size_t len = s21_strlen(str);
+
+  for (int i = 0; i < len; i++) {
+    if (str[i] >= 'a' && str[i] <= 'z')
+      str[i] = str[i] + 'A' - 'a';
+    else
+      str[i] = str[i];
+  }
+
+  return str;
 }
