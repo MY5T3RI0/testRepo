@@ -1,2 +1,2 @@
 strtok_test
-b
+

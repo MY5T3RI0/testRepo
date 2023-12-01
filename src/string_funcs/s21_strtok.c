@@ -10,7 +10,7 @@ char *s21_strtok(char *str, const char *delim) {
     last = s21_strpbrk(last, delim);
     if (last) {
       *last = '\0';
-      if (s21_strlen(start))
+      if (*start != 0)
         is_empty = 0;
       else
         start++;

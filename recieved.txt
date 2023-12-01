@@ -1,2 +1,2 @@
-strerror_test
-Unknown error 145
+strstr_test
+AB
