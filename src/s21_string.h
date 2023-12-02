@@ -2,7 +2,48 @@
 #ifndef S21_STRING
 #define S21_STRING
 
+#include <math.h>
+#include <stdarg.h>
 #include <stdlib.h>
+
+#include "common/const.h"
+
+#define NUMS_STR "0123456789"
+#define spec_c 1
+#define spec_d 2
+#define spec_i 4
+#define spec_e 8
+#define spec_E 16
+#define spec_f 32
+#define spec_g 64
+#define spec_G 128
+#define spec_o 256
+#define spec_s 512
+#define spec_u 1024
+#define spec_x 2048
+#define spec_X 4096
+#define spec_p 8192
+#define spec_n 16384
+#define spec_percent 32768
+
+#define flag_minus 1
+#define flag_plus 2
+#define flag_space 4
+#define flag_sharp 8
+#define flag_0 16
+
+#define len_h 1
+#define len_l 2
+#define len_L 4
+
+typedef struct string_format {
+  int specifier;
+  int flags;
+  int width;
+  int precision;
+  int len;
+  int is_precision;
+} FORMAT;
 
 // Ищет первое вхождение символа c (беззнакового символа) в первых n байтах
 // строки, на которую указывает аргумент str.
@@ -60,6 +101,40 @@ size_t s21_strspn(const char *str1, const char *str2);
 char *s21_strstr(const char *haystack, const char *needle);
 // Разбивает строку str на серию токенов, разделенных разделителем.
 char *s21_strtok(char *str, const char *delim);
+
+// cs funcs
+void *s21_to_upper(const char *str);
+void *s21_to_lower(const char *str);
+void *s21_insert(const char *src, const char *str, size_t start_index);
+void *s21_trim(const char *src, const char *trim_chars);
+
+// sprintf funcs
+int s21_sprintf(char *str, const char *format, ...);
+int handle_spec(char *str, const char *format, va_list arg, int *j);
+void get_len(FORMAT *form, char sym, int *i);
+void get_flags(FORMAT *form, char *format, int *i);
+void get_specifier(FORMAT *form, char sym, int *i);
+void get_precision(FORMAT *form, char *format, int *i, va_list arg);
+void get_width(FORMAT *form, char *format, int *i, va_list arg);
+int s21_atoi(char *str);
+size_t s21_itoa(long long num, char *str, int radix);
+size_t s21_utoa(unsigned long long num, char *str, int radix);
+size_t s21_ftoa(long double num, char *str, int precision);
+void format_spec(char *str, FORMAT *form, va_list arg, int *j);
+int is_decimal(FORMAT *form);
+int is_float(FORMAT *form);
+int is_nradix(FORMAT *form);
+void format_nradix(char *str, FORMAT *form, va_list arg, int *j);
+void format_decimal(char *str, FORMAT *form, va_list arg, int *j);
+void format_unsigned(char *str, FORMAT *form, va_list arg, int *j);
+void format_pointer(char *str, FORMAT *form, va_list arg, int *j);
+void format_char(char *str, FORMAT *form, va_list arg, int *j);
+void format_string(char *str, FORMAT *form, va_list arg, int *j);
+void format_percent(char *str, int *j);
+void format_float(char *str, FORMAT *form, va_list arg, int *j);
+char *upper(char *str);
+void remove_nulls(char *str);
+int g_selector(FORMAT *form, int p, int x);
 
 #ifdef __APPLE__
 #define ERR_MAX 107

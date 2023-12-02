@@ -1,2 +1,0 @@
-strtok_test
-

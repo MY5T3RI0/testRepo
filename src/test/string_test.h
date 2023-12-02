@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "../common/file.h"
-#include "../string_funcs/s21_string.h"
+#include "../s21_string.h"
 
 #define LINE "------------------------\n"
 #define RECIEVED_PATH "recieved.txt"
