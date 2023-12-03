@@ -1,4 +1,4 @@
-FLAGS = -g -lm
+FLAGS = -g -lm -Wall -Werror -Wextra
 WORKDIR = src
 COMMONDIR = $(WORKDIR)/common
 TESTDIR = $(WORKDIR)/test
