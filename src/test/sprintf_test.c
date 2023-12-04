@@ -11,8 +11,8 @@ int main() {
       "%d\n "
       "string: "
       "%s\n "
-      "unsigned: %u\n pointer: %p\n percent %%\n float: %#.4f\n scientific: "
-      "%e\n upper scientific: %.2E\n spec_g: %g";
+      "unsigned: %u\n pointer: %p\n percent %%\n float: %#+20.4f\n scientific: "
+      "%e\n upper scientific: %.2E\n spec_g: %#.11G";
 
   int res1 = s21_sprintf(str1, format, 14, 13, 25, 'a', 36, -74, "str", -5,
                          format, 1.00004, 123.4567890, 0.036, 123.4567890);

@@ -109,15 +109,14 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   char buff[30] = {0};
 
   notation = calculate_notation(notation, &temp, &positive_notation);
-  int total_precision = form->is_precision ? form->precision : 6;
+  form->precision = form->is_precision ? form->precision : 6;
   int total_notation = notation * (positive_notation ? 1 : -1);
 
-  if (form->specifier & (spec_g | spec_G))
-    calculate_precision(form, total_notation, total_precision);
+  if (form->specifier & (spec_g | spec_G) && !(form->is_precision))
+    calculate_precision(form, total_notation, form->precision);
   if (form->specifier & spec_e || form->specifier & spec_E) num = temp;
 
-  s21_size_t num_size =
-      s21_ftoa(num, buff, form->is_precision ? form->precision : 6);
+  s21_size_t num_size = s21_ftoa(num, buff, form->precision);
   s21_size_t precision =
       num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
@@ -135,8 +134,7 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
       form->precision >= num_size ? form->precision - num_size : 0;
   for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
-  if (form->specifier & (spec_G | spec_g) && form->flags & flag_sharp)
-    set_nulls(buff, form);
+  if (form->specifier & (spec_G | spec_g)) set_nulls(buff, form);
 
   s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
   shift += s21_strlen(buff);
@@ -172,10 +170,16 @@ void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
   int width = form->width - precision;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
-  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
-    str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
-  if (form->flags & flag_plus && num > 0)
-    str[shift++] = '+';
+  if (!(form->flags & flag_0) && !(form->is_precision))
+    for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+      str[shift++] = ' ';
+
+  if (form->flags & flag_plus && num > 0) str[shift++] = '+';
+
+  if (form->flags & flag_0 && !(form->is_precision))
+    for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+      str[shift++] = '0';
+
   else if (form->flags & flag_space && num > 0)
     str[shift++] = ' ';
 
@@ -526,7 +530,11 @@ void set_nulls(char* str, FORMAT* form) {
       is_end = 1;
   }
 
-  s21_memset(&(str[s21_strlen(str)]), '0', form->precision);
+  len = s21_strlen(str);
+  if (s21_strchr(str, '.')) len--;
+  if (form->flags & flag_sharp)
+    s21_memset(&(str[s21_strlen(str)]), '0',
+               form->precision > len ? form->precision - len : 0);
 }
 
 int g_selector(int p, int x) { return p > x && x >= -4; }
