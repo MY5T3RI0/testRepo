@@ -1,11 +1,16 @@
 #ifndef SRC_S21_SSCANF_H_
 #define SRC_S21_SSCANF_H_
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>  // потом свою подключем
+#define BUFF_SIZE 512
 
 typedef enum widthType { NONE_WIDTH, WIDTH_NUMBER, WIDTH_STAR } widthType;
 
 enum errorCode {
-  OK = -1,
-  ERROR,
+  ERROR = -1,
+  OK,
 };
 
 typedef enum lengthType {
@@ -27,5 +32,17 @@ typedef struct token {
 } token;
 
 int s21_sscanf(const char *str, const char *format, ...);
-
+int isSpace(char c);
+int isLetter(char c);
+int isDigit(char c);
+int checkEOFString(const char *str);
+token parseToken(char **formatPtr, va_list *va);
+void skipSpaces(char **str);
+void parseWidth(char **formatPtr, token *result);
+int parseNumber(char **formatPtr);
+void parseLength(char **formatPtr, token *result);
+void parseSpecifier(char **formatPtr, token *result);
+int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen);
+int writeCharToMem(char **str, token *tok);
+int writeStringToMem(char **str, token *tok);
 #endif

@@ -1,16 +1,11 @@
 #include "s21_sscanf.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>  // потом свою подключем
-
-#define BUFF_SIZE 512
 
 int s21_sscanf(const char *str, const char *format, ...) {
   int errCode = checkEOFString(str);
   int result = 0;
 
-  if (!errCode) {
+  if (errCode == OK) {
     va_list va;
     va_start(va, format);
     int tokenLen = 0;
@@ -27,7 +22,7 @@ int s21_sscanf(const char *str, const char *format, ...) {
       tokenLen++;
     }
 
-    writeTokensToMemory(&strPtr, tokens, tokenLen, &result);
+    result = writeTokensToMemory(&strPtr, tokens, tokenLen);
     va_end(va);
   }
 
@@ -43,11 +38,11 @@ int isLetter(char c) {
 int isDigit(char c) { return c >= '0' && c <= '9'; }
 
 int checkEOFString(const char *str) {
-  int result = OK;
+  int result = ERROR;
 
   for (size_t i = 0; str[i]; i++) {
     if (!isSpace(str[i]) && str[i] != '\0') {
-      result = ERROR;
+      result = OK;
       break;
     }
   }
@@ -164,14 +159,15 @@ void parseSpecifier(char **formatPtr, token *result) {
   (*formatPtr)++;
 }
 
-void writeTokensToMemory(char **strPtr, token *tokens, int tokenLen,
-                         int *result) {
+int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen) {
+  int errCode = 0;
   char *start = *strPtr;
 
   for (size_t i = 0; i < tokenLen; i++) {
     char spec = tokens[i].spec;
 
     if (spec == 'c') {
+		errCode = writeCharToMem(strPtr, &tokens[i]);
     }
 
     if (spec == 'd') {
@@ -184,6 +180,7 @@ void writeTokensToMemory(char **strPtr, token *tokens, int tokenLen,
     }
 
     if (spec == 's') {
+		errCode = writeStringToMem(strPtr, &tokens[i]);
     }
 
     if (spec == 'x' || spec == 'X') {
@@ -205,4 +202,73 @@ void writeTokensToMemory(char **strPtr, token *tokens, int tokenLen,
     if (spec == 'n') {
     }
   }
+}
+
+int writeCharToMem(char **str, token *tok) {
+	int codeErr = ERROR;
+
+	if (**str) {
+		codeErr = OK;
+
+		if (tok->width == WIDTH_STAR) {
+			(*str)++;
+		} else {
+			*(char*)tok->address = **str;
+			(*str)++;
+		}
+	}
+
+	return codeErr;
+}
+
+int writeStringToMem(char **str, token *tok) {
+	int codeErr = ERROR;
+	size_t i = 0;
+	char buffer[BUFF_SIZE] = {0};
+	int isStr = 0;
+	int isEndOfString = 0;
+
+	while (**str && !isStr) //пока строка не закончилась и он не нашел начало слова
+	{
+		if (!isSpace(**str)) {
+			isStr = 1;
+
+			while (**str && !isEndOfString)
+			{
+				buffer[i] = **str;
+				i++;
+
+				if (tok->widthType == WIDTH_NUMBER && i >= tok->width) {
+					isEndOfString = 1;
+				}
+
+				(*str)++;
+
+				if (isSpace(**str)) {
+					(*str)--;
+					isEndOfString = 1;
+				}
+
+			}
+			
+			
+		}
+
+		(*str)++;
+	}
+
+
+	if (tok->widthType != WIDTH_STAR && isStr) {
+        strcpy((char *)tok->address, buffer);
+    }
+
+	return codeErr;
+}
+
+
+int main() {
+	char* test_char;
+	s21_sscanf("lopata", "%s", test_char);
+
+	printf("%s\n", test_char);
 }
