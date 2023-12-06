@@ -96,6 +96,8 @@ void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
   for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += num_size + shift;
 }
 
@@ -149,6 +151,8 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
     shift += s21_itoa(notation, &(str[shift]), 10);
   }
 
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += shift;
 }
 
@@ -184,6 +188,8 @@ void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
     str[shift++] = ' ';
 
   s21_strncpy(&(str[shift]), buff, num_size);
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += num_size + shift;
 }
 
@@ -212,6 +218,8 @@ void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
   for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += num_size + shift;
 }
 
@@ -227,7 +235,9 @@ void format_pointer(char* str, FORMAT* form, va_list arg, int* j) {
     str[shift++] = ' ';
 
   for (int i = 0; i < num_size; i++) str[shift++] = buff[i];
-
+  for (int i = 0;
+       i < form->width - num_size - shift && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += shift;
 }
 
@@ -240,6 +250,8 @@ void format_char(char* str, FORMAT* form, va_list arg, int* j) {
     str[shift++] = ' ';
 
   str[shift++] = sym;
+  for (int i = 0; i < form->width - shift && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += shift;
 }
 
@@ -257,7 +269,8 @@ void format_string(char* str, FORMAT* form, va_list arg, int* j) {
     str[shift++] = ' ';
 
   for (int i = 0; i < precision; i++) str[shift++] = new_str[i];
-
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
   (*j) += shift;
 }
 

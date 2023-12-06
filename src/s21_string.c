@@ -99,12 +99,13 @@ char *s21_strerror(int errnum) {
   static char error[STRERR_MAX];
   ARRAY;
 
-  if (errnum > ERR_MAX) {
-    char buff[4096] = {0};
-    s21_sprintf(buff, "%s%d", ERROR, errnum);
-    s21_strncpy(error, buff, s21_strlen(buff));
-  } else
-    s21_strncpy(error, errlist[errnum], s21_strlen(errlist[errnum]));
+  if (errnum >= ERR_MAX || errnum < 0) {
+    s21_sprintf(error, "%s%d", ERROR, errnum);
+  } else {
+    int len = s21_strlen(errlist[errnum]);
+    s21_strncpy(error, errlist[errnum], len);
+    error[len] = '\0';
+  }
 
   return error;
 }
