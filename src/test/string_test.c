@@ -16,40 +16,28 @@ void print_func_res_even(int c, char *argv[]) {
       memcmp_test(s21_memcmp, STR3, STR4, SIZE, RECIEVED_PATH);
       break;
     case 4:
-      memmove_test(memmove, STR1, STR2, SIZE, EXPECTED_PATH);
-      memmove_test(s21_memmove, STR3, STR4, SIZE, RECIEVED_PATH);
+      memset_test(memset, STR1, SYM, SIZE, EXPECTED_PATH);
+      memset_test(s21_memset, STR3, SYM, SIZE, RECIEVED_PATH);
       break;
     case 6:
-      strcat_test(strcat, STR1, STR2, EXPECTED_PATH);
-      strcat_test(s21_strcat, STR3, STR4, RECIEVED_PATH);
-      break;
-    case 8:
       strchr_test(strchr, STR1, SYM, EXPECTED_PATH);
       strchr_test(s21_strchr, STR3, SYM, RECIEVED_PATH);
       break;
-    case 10:
-      strncmp_test(strncmp, STR1, STR2, SIZE, EXPECTED_PATH);
-      strncmp_test(s21_strncmp, STR3, STR4, SIZE, RECIEVED_PATH);
-      break;
-    case 12:
+    case 8:
       strncpy_test(strncpy, STR1, STR2, SIZE, EXPECTED_PATH);
       strncpy_test(s21_strncpy, STR3, STR4, SIZE, RECIEVED_PATH);
       break;
-    case 14:
+    case 10:
       strerror_test(strerror, SYM, EXPECTED_PATH);
       strerror_test(s21_strerror, SYM, RECIEVED_PATH);
       break;
-    case 16:
+    case 12:
       strpbrk_test(strpbrk, STR1, STR2, EXPECTED_PATH);
       strpbrk_test(s21_strpbrk, STR3, STR4, RECIEVED_PATH);
       break;
-    case 18:
-      strspn_test(strspn, STR1, STR2, EXPECTED_PATH);
-      strspn_test(s21_strspn, STR3, STR4, RECIEVED_PATH);
-      break;
-    case 20:
-      strtok_test(strtok, STR1, STR2, EXPECTED_PATH);
-      strtok_test(s21_strtok, STR3, STR4, RECIEVED_PATH);
+    case 14:
+      strstr_test(strstr, STR1, STR2, EXPECTED_PATH);
+      strstr_test(s21_strstr, STR3, STR4, RECIEVED_PATH);
       break;
     default:
       printf("invalid func num");
@@ -68,36 +56,28 @@ void print_func_res_odd(int c, char *argv[]) {
       memcpy_test(s21_memcpy, STR3, STR4, SIZE, RECIEVED_PATH);
       break;
     case 5:
-      memset_test(memset, STR1, SYM, SIZE, EXPECTED_PATH);
-      memset_test(s21_memset, STR3, SYM, SIZE, RECIEVED_PATH);
-      break;
-    case 7:
       strncat_test(strncat, STR1, STR2, SIZE, EXPECTED_PATH);
       strncat_test(s21_strncat, STR3, STR4, SIZE, RECIEVED_PATH);
       break;
+    case 7:
+      strncmp_test(strncmp, STR1, STR2, SIZE, EXPECTED_PATH);
+      strncmp_test(s21_strncmp, STR3, STR4, SIZE, RECIEVED_PATH);
+      break;
     case 9:
-      strcmp_test(strcmp, STR1, STR2, EXPECTED_PATH);
-      strcmp_test(s21_strcmp, STR3, STR4, RECIEVED_PATH);
-      break;
-    case 11:
-      strcpy_test(strcpy, STR1, STR2, EXPECTED_PATH);
-      strcpy_test(s21_strcpy, STR3, STR4, RECIEVED_PATH);
-      break;
-    case 13:
       strcspn_test(strcspn, STR1, STR2, EXPECTED_PATH);
       strcspn_test(s21_strcspn, STR3, STR4, RECIEVED_PATH);
       break;
-    case 15:
+    case 11:
       strlen_test(strlen, STR1, EXPECTED_PATH);
       strlen_test(s21_strlen, STR3, RECIEVED_PATH);
       break;
-    case 17:
+    case 13:
       strrchr_test(strrchr, STR1, SYM, EXPECTED_PATH);
       strrchr_test(s21_strrchr, STR3, SYM, RECIEVED_PATH);
       break;
-    case 19:
-      strstr_test(strstr, STR1, STR2, EXPECTED_PATH);
-      strstr_test(s21_strstr, STR3, STR4, RECIEVED_PATH);
+    case 15:
+      strtok_test(strtok, STR1, STR2, EXPECTED_PATH);
+      strtok_test(s21_strtok, STR3, STR4, RECIEVED_PATH);
       break;
     default:
       printf("invalid func num");

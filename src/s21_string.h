@@ -2,26 +2,70 @@
 #ifndef S21_STRING
 #define S21_STRING
 
+#include <math.h>
+#include <stdarg.h>
 #include <stdlib.h>
+
+#include "common/const.h"
+
+#define NUMS_STR "0123456789"
+#define s21_NULL ((void *)0)
+#define spec_c 1
+#define spec_d 2
+#define spec_i 4
+#define spec_e 8
+#define spec_E 16
+#define spec_f 32
+#define spec_g 64
+#define spec_G 128
+#define spec_o 256
+#define spec_s 512
+#define spec_u 1024
+#define spec_x 2048
+#define spec_X 4096
+#define spec_p 8192
+#define spec_n 16384
+#define spec_percent 32768
+
+#define flag_minus 1
+#define flag_plus 2
+#define flag_space 4
+#define flag_sharp 8
+#define flag_0 16
+
+#define len_h 1
+#define len_l 2
+#define len_L 4
+
+typedef long unsigned s21_size_t;
+
+typedef struct string_format {
+  int specifier;
+  int flags;
+  int width;
+  s21_size_t precision;
+  int len;
+  int is_precision;
+} FORMAT;
 
 // Ищет первое вхождение символа c (беззнакового символа) в первых n байтах
 // строки, на которую указывает аргумент str.
-void *s21_memchr(const void *str, int c, size_t n);
+void *s21_memchr(const void *str, int c, s21_size_t n);
 // Сравнивает первые n байтов строк str1 и str2.
-int s21_memcmp(const void *str1, const void *str2, size_t n);
+int s21_memcmp(const void *str1, const void *str2, s21_size_t n);
 // Копирует n символов из источника в пункт назначения.
-void *s21_memcpy(void *dest, const void *src, size_t n);
+void *s21_memcpy(void *dest, const void *src, s21_size_t n);
 // Еще одна функция для копирования n символов из src в dest.
-void *s21_memmove(void *dest, const void *src, size_t n);
+void *s21_memmove(void *dest, const void *src, s21_size_t n);
 // Копирует символ c (беззнаковый символ) в первые n символов строки, на которую
 // указывает аргумент str.
-void *s21_memset(void *str, int c, size_t n);
+void *s21_memset(void *str, int c, s21_size_t n);
 // Добавляет строку, на которую указывает src, в конец строки, на которую
 // указывает dest.
 char *s21_strcat(char *dest, const char *src);
 // Добавляет строку, на которую указывает src, к концу строки, на которую
 // указывает dest, длиной до n символов.
-char *s21_strncat(char *dest, const char *src, size_t n);
+char *s21_strncat(char *dest, const char *src, s21_size_t n);
 // Ищет первое вхождение символа c (беззнакового символа) в строке, на которую
 // указывает аргумент str.
 int s21_strcmp(const char *str1, const char *str2);
@@ -29,14 +73,14 @@ int s21_strcmp(const char *str1, const char *str2);
 // указывает строка str2.
 char *s21_strchr(const char *str, int c);
 // Сравнивает не более первых n байтов строк str1 и str2.
-int s21_strncmp(const char *str1, const char *str2, size_t n);
+int s21_strncmp(const char *str1, const char *str2, s21_size_t n);
 // Копирует строку, на которую указывает src, в dest.
 char *s21_strcpy(char *dest, const char *src);
 // Копирует до n символов из строки, на которую указывает src, в dest.
-char *s21_strncpy(char *dest, const char *src, size_t n);
+char *s21_strncpy(char *dest, const char *src, s21_size_t n);
 // Вычисляет длину начального сегмента строки str1, который полностью состоит из
 // символов, отсутствующих в строке str2.
-size_t s21_strcspn(const char *str1, const char *str2);
+s21_size_t s21_strcspn(const char *str1, const char *str2);
 // Ищет во внутреннем массиве номер ошибки errnum и возвращает указатель на
 // строку сообщения об ошибке. Вам необходимо объявить макросы, содержащие
 // массивы сообщений об ошибках, для операционных систем Mac и Linux. Описания
@@ -45,7 +89,7 @@ size_t s21_strcspn(const char *str1, const char *str2);
 char *s21_strerror(int errnum);
 // Вычисляет длину строки str до завершающего нулевого символа, но не включая
 // его.
-size_t s21_strlen(const char *str);
+s21_size_t s21_strlen(const char *str);
 // Находит первый символ в строке str1, соответствующий любому символу,
 // указанному в str2.
 char *s21_strpbrk(const char *str1, const char *str2);
@@ -54,12 +98,48 @@ char *s21_strpbrk(const char *str1, const char *str2);
 char *s21_strrchr(const char *str, int c);
 // Вычисляет длину начального сегмента строки str1, который полностью состоит из
 // символов строки str2.
-size_t s21_strspn(const char *str1, const char *str2);
+s21_size_t s21_strspn(const char *str1, const char *str2);
 // Находит первое вхождение всей строки иглы (не включая завершающий нулевой
 // символ), которая появляется в строковом стоге.
 char *s21_strstr(const char *haystack, const char *needle);
 // Разбивает строку str на серию токенов, разделенных разделителем.
 char *s21_strtok(char *str, const char *delim);
+
+// cs funcs
+void *s21_to_upper(const char *str);
+void *s21_to_lower(const char *str);
+void *s21_insert(const char *src, const char *str, s21_size_t start_index);
+void *s21_trim(const char *src, const char *trim_chars);
+
+// sprintf funcs
+int s21_sprintf(char *str, const char *format, ...);
+int handle_spec(char *str, const char *format, va_list arg, int *j);
+void get_len(FORMAT *form, char sym, int *i);
+void get_flags(FORMAT *form, char *format, int *i);
+void get_specifier(FORMAT *form, char sym, int *i);
+void get_precision(FORMAT *form, char *format, int *i, va_list arg);
+void get_width(FORMAT *form, char *format, int *i, va_list arg);
+int s21_atoi(char *str);
+s21_size_t s21_itoa(long long num, char *str, int radix);
+s21_size_t s21_utoa(unsigned long long num, char *str, int radix);
+s21_size_t s21_ftoa(long double num, char *str, s21_size_t precision);
+void format_spec(char *str, FORMAT *form, va_list arg, int *j);
+int is_decimal(FORMAT *form);
+int is_float(FORMAT *form);
+int is_nradix(FORMAT *form);
+void format_nradix(char *str, FORMAT *form, va_list arg, int *j);
+void format_decimal(char *str, FORMAT *form, va_list arg, int *j);
+void format_unsigned(char *str, FORMAT *form, va_list arg, int *j);
+void format_pointer(char *str, FORMAT *form, va_list arg, int *j);
+void format_char(char *str, FORMAT *form, va_list arg, int *j);
+void format_string(char *str, FORMAT *form, va_list arg, int *j);
+void format_percent(char *str, int *j);
+void format_float(char *str, FORMAT *form, va_list arg, int *j);
+char *upper(char *str);
+void set_nulls(char *str, FORMAT *form);
+int g_selector(int p, int x);
+int calculate_notation(int notation, double *temp, int *positive_notation);
+void calculate_precision(FORMAT *form, int total_notation, int total_precision);
 
 #ifdef __APPLE__
 #define ERR_MAX 107

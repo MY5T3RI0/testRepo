@@ -2,7 +2,7 @@
 
 common_strings=(Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.)
 
-functions=(memchr memcmp memcpy memmove memset strcat strncat strchr strcmp strncmp strcpy strncpy strcspn strerror strlen strpbrk strrchr strspn strstr strtok)
+functions=(memchr memcmp memcpy memset strncat strchr strncmp strncpy strcspn strerror strlen strpbrk strrchr strstr strtok)
 
 current_str=""
 str1=""
@@ -33,7 +33,7 @@ function get_args {
 	united_str=$str1$str2
 	size=$[ $RANDOM % (${#united_str}+1)]
 	sym=$[ $RANDOM % 256 ]
-	func_num=$[ $RANDOM % 20 + 1 ]
+	func_num=$[ $RANDOM % 15 + 1 ]
 }
 
 function clear_vars {
@@ -47,18 +47,18 @@ function clear_vars {
 
 make rebuild
 
-for test in `seq $[ $1 * 20 ]`
+for test in `seq $[ $1 * 15 ]`
 do
 	get_args
 	
-	valgrind --tool=memcheck --leak-check=yes --quiet --leak-resolution=high --error-exitcode=1 ../build/string_test $[ $test % 21 ] "$str1" "$str2" $size $sym "$str1" "$str2"
+	valgrind --tool=memcheck --leak-check=yes --quiet --leak-resolution=high --error-exitcode=1 ../string_test $[ $test % 16 ] "$str1" "$str2" $size $sym "$str1" "$str2"
 
 	echo -e "$(diff -s recieved.txt expected.txt) "
     if [[ !(result -eq 0) || $(diff -q recieved.txt expected.txt) ]]
 	then
 		echo "____________________________________________________________"
 		printf "%s " "The wrong function is"
-		printf "%s\n" ${functions[$test % 21 - 1]}
+		printf "%s\n" ${functions[$test % 16 - 1]}
 		printf "%s" "Executed command: ./string_test " 
 		printf "%d " $test
 		printf "%s " \"$str1\"
@@ -68,7 +68,7 @@ do
 		echo "____________________________________________________________"
 		exit
 	else
-	printf "function: %s\n\n" ${functions[$test % 20 - 1]}
+	printf "function: %s\n\n" ${functions[$test % 15 - 1]}
 	fi
 
 	clear_vars

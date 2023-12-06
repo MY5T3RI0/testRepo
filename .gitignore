@@ -1,0 +1,4 @@
+*.txt
+./src/test/*.txt
+src/sprintf_test
+src/string_test

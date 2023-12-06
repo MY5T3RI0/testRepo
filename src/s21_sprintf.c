@@ -1,11 +1,11 @@
-#include "s21_sptintf.h"
+#include "s21_string.h"
 
-int sprintf(char* str, const char* format, ...) {
-  size_t format_len = s21_strlen(format) + 1;
+int s21_sprintf(char* str, const char* format, ...) {
+  s21_size_t format_len = s21_strlen(format) + 1;
   va_list arg;
   va_start(arg, format);
 
-  int i = 0;
+  s21_size_t i = 0;
   int j = 0;
   for (; i < format_len; i++) {
     if (format[i] == '%')
@@ -15,7 +15,7 @@ int sprintf(char* str, const char* format, ...) {
   }
 
   va_end(arg);
-  return i;
+  return j > 0 ? j - 1 : 0;
 }
 
 int handle_spec(char* str, const char* format, va_list arg, int* j) {
@@ -67,10 +67,11 @@ void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
   else if (!form->len)
     num = (unsigned)num;
 
-  char buff[25];
-  int num_size = s21_utoa(num, buff, radix);
+  char buff[25] = {0};
+  s21_size_t num_size = s21_utoa(num, buff, radix);
   if (form->specifier & spec_X) upper(buff);
-  int precision = num_size > form->precision ? num_size : form->precision;
+  s21_size_t precision =
+      num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
   if (form->flags & flag_sharp) width -= radix / 8;
 
@@ -90,7 +91,9 @@ void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
     }
   }
 
-  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+  s21_size_t nulls_count =
+      form->precision >= num_size ? form->precision - num_size : 0;
+  for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
   (*j) += num_size + shift;
@@ -100,62 +103,52 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   int shift = 0;
   int notation = 0;
   double num = va_arg(arg, double);
-  int positiv_notation = 1;
+  int positive_notation = 1;
   if (!(form->len & len_L)) num = (double)num;
   double temp = num;
-  char buff[30];
+  char buff[30] = {0};
 
-  while (temp > 10) {
-    temp /= 10;
-    notation++;
-  }
-  while (temp < 1) {
-    temp *= 10;
-    notation++;
-    positiv_notation = 0;
-  }
+  notation = calculate_notation(notation, &temp, &positive_notation);
+  form->precision = form->is_precision ? form->precision : 6;
+  int total_notation = notation * (positive_notation ? 1 : -1);
 
-  int total_precision = form->is_precision ? form->precision : 6;
-  int total_notation = notation * (positiv_notation ? 1 : -1);
-
-  if (!g_selector(form, total_precision, total_notation)) {
-    form->specifier |= (form->specifier & spec_g ? spec_e : spec_E);
-    form->is_precision = 1;
-    form->precision = total_precision - 1 > 0 ? total_precision - 1 : 0;
-  } else if (form->specifier & (spec_G | spec_g)) {
-    form->is_precision = 1;
-    form->precision = total_precision - (total_notation + 1);
-    if (form->precision) form->precision = 0;
-  }
-
+  if (form->specifier & (spec_g | spec_G) && !(form->is_precision))
+    calculate_precision(form, total_notation, form->precision);
   if (form->specifier & spec_e || form->specifier & spec_E) num = temp;
 
-  int num_size = s21_ftoa(num, buff, form->is_precision ? form->precision : 6);
-  int precision = num_size > form->precision ? num_size : form->precision;
+  s21_size_t num_size = s21_ftoa(num, buff, form->precision);
+  s21_size_t precision =
+      num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
   for (int i = 0; i < width && !(form->flags & flag_minus); i++)
     str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
+
   if (form->flags & flag_plus && num > 0)
     str[shift++] = '+';
   else if (form->flags & flag_space && num > 0)
     str[shift++] = ' ';
-  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
-  if (form->specifier & (spec_G | spec_g) && form->flags & flag_sharp) {
-    remove_nulls(buff);
-    s21_memset(&(buff[s21_strlen(buff)]), '0', form->precision);
-  }
+
+  s21_size_t nulls_count =
+      form->precision >= num_size ? form->precision - num_size : 0;
+  for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
+
+  if (form->specifier & (spec_G | spec_g)) set_nulls(buff, form);
+
   s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
   shift += s21_strlen(buff);
+
   if (form->is_precision && form->flags & flag_sharp && form->precision == 0)
     str[shift++] = '.';
+
   if (form->specifier & spec_e || form->specifier & spec_E) {
     str[shift++] = form->specifier & spec_e ? 'e' : 'E';
-    str[shift++] = positiv_notation ? '+' : '-';
+    str[shift++] = positive_notation ? '+' : '-';
     if (notation < 10) str[shift++] = '0';
     shift += s21_itoa(notation, &(str[shift]), 10);
   }
+
   (*j) += shift;
 }
 
@@ -170,16 +163,23 @@ void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
   else if (!form->len)
     num = (int)num;
 
-  char buff[25];
-  int num_size = s21_itoa(num, buff, 10);
-  int precision = num_size > form->precision ? num_size : form->precision;
+  char buff[25] = {0};
+  s21_size_t num_size = s21_itoa(num, buff, 10);
+  s21_size_t precision =
+      num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
-  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
-    str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
-  if (form->flags & flag_plus && num > 0)
-    str[shift++] = '+';
+  if (!(form->flags & flag_0) && !(form->is_precision))
+    for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+      str[shift++] = ' ';
+
+  if (form->flags & flag_plus && num > 0) str[shift++] = '+';
+
+  if (form->flags & flag_0 && !(form->is_precision))
+    for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+      str[shift++] = '0';
+
   else if (form->flags & flag_space && num > 0)
     str[shift++] = ' ';
 
@@ -198,15 +198,18 @@ void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
   else if (!form->len)
     num = (unsigned)num;
 
-  char buff[25];
-  int num_size = s21_utoa(num, buff, 10);
-  int precision = num_size > form->precision ? num_size : form->precision;
+  char buff[25] = {0};
+  s21_size_t num_size = s21_utoa(num, buff, 10);
+  s21_size_t precision =
+      num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
 
   for (int i = 0; i < width && !(form->flags & flag_minus); i++)
     str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
 
-  for (int i = 0; i < form->precision - num_size; i++) str[shift++] = '0';
+  s21_size_t nulls_count =
+      form->precision >= num_size ? form->precision - num_size : 0;
+  for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
   (*j) += num_size + shift;
@@ -214,9 +217,9 @@ void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
 
 void format_pointer(char* str, FORMAT* form, va_list arg, int* j) {
   int shift = 2;
-  s21_strncat(str, "0x", 2);
+  s21_strncpy(str, "0x", 2);
   unsigned long num = va_arg(arg, unsigned long);
-  char buff[25];
+  char buff[25] = {0};
   int num_size = s21_utoa(num, buff, 16);
 
   for (int i = 0;
@@ -406,7 +409,7 @@ void get_width(FORMAT* form, char* format, int* i, va_list arg) {
     form->width = va_arg(arg, int);
     *i += 1;
   } else {
-    char buff[25];
+    char buff[25] = {0};
     int j = -1;
     char nums[] = NUMS_STR;
     while (s21_strchr(nums, format[++j])) {
@@ -424,11 +427,11 @@ void get_width(FORMAT* form, char* format, int* i, va_list arg) {
 }
 
 int s21_atoi(char* str) {
-  size_t len = s21_strspn(str, NUMS_STR);
+  s21_size_t len = s21_strspn(str, NUMS_STR);
   int res = 0;
   int state = 1;
 
-  for (int i = 0; i < len && state; i++) {
+  for (s21_size_t i = 0; i < len && state; i++) {
     if (str[i] < '0' || str[i] > '9')
       state = 0;
     else
@@ -438,7 +441,7 @@ int s21_atoi(char* str) {
   return res;
 }
 
-size_t s21_itoa(long long num, char* str, int radix) {
+s21_size_t s21_itoa(long long num, char* str, int radix) {
   char buff[25] = {0};
   char nums[] = "0123456789abcdef";
   if (num < 0) {
@@ -453,15 +456,15 @@ size_t s21_itoa(long long num, char* str, int radix) {
       num /= radix;
     }
 
-  size_t len = s21_strlen(buff);
+  s21_size_t len = s21_strlen(buff);
 
-  for (int i = 0; i < len; i++)
+  for (s21_size_t i = 0; i < len; i++)
     str[str[0] == '-' ? i + 1 : i] = buff[len - i - 1];
 
   return str[0] == '-' ? len + 1 : len;
 }
 
-size_t s21_utoa(unsigned long long num, char* str, int radix) {
+s21_size_t s21_utoa(unsigned long long num, char* str, int radix) {
   char buff[25] = {0};
   char nums[] = "0123456789abcdef";
 
@@ -470,27 +473,27 @@ size_t s21_utoa(unsigned long long num, char* str, int radix) {
     num /= radix;
   }
 
-  size_t len = s21_strlen(buff);
+  s21_size_t len = s21_strlen(buff);
 
-  for (int i = 0; i < len; i++) str[i] = buff[len - i - 1];
+  for (s21_size_t i = 0; i < len; i++) str[i] = buff[len - i - 1];
 
   return len;
 }
 
-size_t s21_ftoa(long double num, char* str, int precision) {
+s21_size_t s21_ftoa(long double num, char* str, size_t precision) {
   long double x, y;
-  size_t res = 0;
+  s21_size_t res = 0;
   if (num < 0) {
     str[res++] = '-';
     num *= -1;
   }
   y = modfl(num, &x);
-  char buff[25];
+  char buff[25] = {0};
 
   res += s21_itoa(x, &(str[res]), 10);
   if (precision > 0) {
     str[res++] = '.';
-    size_t float_size = s21_itoa(roundl(y * pow(10, precision)), buff, 10);
+    s21_size_t float_size = s21_itoa(roundl(y * pow(10, precision)), buff, 10);
     if (float_size < precision) {
       s21_memset(&(str[res]), '0', precision - float_size);
       res += precision - float_size;
@@ -503,10 +506,10 @@ size_t s21_ftoa(long double num, char* str, int precision) {
 }
 
 char* upper(char* str) {
-  if (!str) return NULL;
-  size_t len = s21_strlen(str);
+  if (!str) return s21_NULL;
+  s21_size_t len = s21_strlen(str);
 
-  for (int i = 0; i < len; i++) {
+  for (s21_size_t i = 0; i < len; i++) {
     if (str[i] >= 'a' && str[i] <= 'z')
       str[i] = str[i] + 'A' - 'a';
     else
@@ -516,18 +519,48 @@ char* upper(char* str) {
   return str;
 }
 
-void remove_nulls(char* str) {
-  size_t len = s21_strlen(str);
+void set_nulls(char* str, FORMAT* form) {
+  s21_size_t len = s21_strlen(str);
   int is_end = 0;
 
-  for (int i = 0; i < len && !is_end; i++) {
+  for (s21_size_t i = 0; i < len && !is_end; i++) {
     if (str[len - i - 1] == '0')
       str[len - i - 1] = '\0';
     else
       is_end = 1;
   }
+
+  len = s21_strlen(str);
+  if (s21_strchr(str, '.')) len--;
+  if (form->flags & flag_sharp)
+    s21_memset(&(str[s21_strlen(str)]), '0',
+               form->precision > len ? form->precision - len : 0);
 }
 
-int g_selector(FORMAT* form, int p, int x) {
-  return p > x && x >= -4 && (form->specifier & (spec_g | spec_G));
+int g_selector(int p, int x) { return p > x && x >= -4; }
+
+int calculate_notation(int notation, double* temp, int* positive_notation) {
+  while (*temp > 10) {
+    *temp /= 10;
+    notation++;
+  }
+  while (*temp < 1) {
+    *temp *= 10;
+    notation++;
+    *positive_notation = 0;
+  }
+
+  return notation;
+}
+
+void calculate_precision(FORMAT* form, int total_notation,
+                         int total_precision) {
+  if (!g_selector(total_precision, total_notation)) {
+    form->specifier |= (form->specifier & spec_g ? spec_e : spec_E);
+    form->is_precision = 1;
+    form->precision = total_precision - 1 > 0 ? total_precision - 1 : 0;
+  } else {
+    form->is_precision = 1;
+    form->precision = total_precision - (total_notation + 1);
+  }
 }
