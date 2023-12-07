@@ -199,7 +199,7 @@ void intConverter(token *tok, long long int result);
 void floatConverter(token *tok, long double result);
 void unsignedConverter(token *tok, unsigned long long int result);
 unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
-                                 int n_byte);
+                                     int n_byte);
 
 #ifdef __APPLE__
 #define ERR_MAX 107

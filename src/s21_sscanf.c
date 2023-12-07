@@ -164,27 +164,27 @@ int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen) {
 
     if (spec == 'c') {
       errCode = writeCharToMem(strPtr, &tokens[i]);
-	} else if (spec == 'd') {
+    } else if (spec == 'd') {
       errCode = writeIntToMem(strPtr, &tokens[i]);
-	} else if (spec == 'g' || spec == 'G' || spec == 'f') {
+    } else if (spec == 'g' || spec == 'G' || spec == 'f') {
       errCode = writeFloatToMem(strPtr, &tokens[i]);
-	} else if (spec == 's') {
+    } else if (spec == 's') {
       errCode = writeStringToMem(strPtr, &tokens[i]);
-	} else if (spec == 'z') {
+    } else if (spec == 'z') {
       skipSpaces(strPtr);
-	} else if (spec == 'u') {
+    } else if (spec == 'u') {
       errCode = writeUnsignedToMem(strPtr, &tokens[i]);
-	} else if (spec == 'b') {
+    } else if (spec == 'b') {
       skipCharsInBuffer(strPtr, &tokens[i]);
-	} else if (spec == 'n') {
+    } else if (spec == 'n') {
       *((int *)tokens[i].address) = (*strPtr) - start;
-	} else if (spec == 'i' || spec == 'p') {
+    } else if (spec == 'i' || spec == 'p') {
       errCode = writeUnspecToMem(strPtr, &tokens[i]);
-	} else if (spec == 'x' || spec == 'X') {
+    } else if (spec == 'x' || spec == 'X') {
       errCode = writeOctHexToMem(strPtr, &tokens[i], 16);
-	} else if (spec == 'o') {
+    } else if (spec == 'o') {
       errCode = writeOctHexToMem(strPtr, &tokens[i], 8);
-	}
+    }
   }
 
   return errCode;
@@ -373,7 +373,7 @@ int writeFloatToMem(char **str, token *tok) {
         floatConverter(tok, result);
       }
 
-	  errCode = _OK;
+      errCode = _OK;
     }
   }
 
@@ -554,9 +554,4 @@ int writeUnspecToMem(char **str, token *tok) {
   }
 
   return errCode;
-}
-
-int main() {
-	int a = 1;
-	(void)a;
 }

@@ -283,19 +283,21 @@ void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
 }
 
 void format_pointer(char* str, FORMAT* form, va_list arg, int* j) {
-  int shift = 2;
-  s21_strncpy(str, "0x", 2);
+  int shift = 0;
   unsigned long num = va_arg(arg, unsigned long);
   char buff[25] = {0};
   int num_size = s21_utoa(num, buff, 16);
 
-  for (int i = 0;
-       i < form->width - num_size - shift && !(form->flags & flag_minus); i++)
+  for (int i = 0; i < form->width - num_size - 2 && !(form->flags & flag_minus);
+       i++)
     str[shift++] = ' ';
 
+  s21_strncpy(&(str[shift]), "0x", 2);
+  shift += 2;
+
   for (int i = 0; i < num_size; i++) str[shift++] = buff[i];
-  for (int i = 0;
-       i < form->width - num_size - shift && (form->flags & flag_minus); i++)
+  for (int i = 0; i < form->width - num_size - 2 && (form->flags & flag_minus);
+       i++)
     str[shift++] = ' ';
   (*j) += shift;
 }
@@ -305,11 +307,11 @@ void format_char(char* str, FORMAT* form, va_list arg, int* j) {
   int shift = 0;
   if (!(form->len & len_l)) sym = (char)sym;
 
-  for (int i = 0; i < form->width - shift && !(form->flags & flag_minus); i++)
+  for (int i = 0; i < form->width - 1 && !(form->flags & flag_minus); i++)
     str[shift++] = ' ';
 
   str[shift++] = sym;
-  for (int i = 0; i < form->width - shift && (form->flags & flag_minus); i++)
+  for (int i = 0; i < form->width - 1 && (form->flags & flag_minus); i++)
     str[shift++] = ' ';
   (*j) += shift;
 }
