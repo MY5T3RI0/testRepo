@@ -10,8 +10,8 @@
 #define BUFF_SIZE 512
 
 enum errorCode {
-  ERROR = -1,
-  OK,
+  _ERROR = -1,
+  _OK,
 };
 
 typedef enum widthType { NONE_WIDTH, WIDTH_NUMBER, WIDTH_STAR } widthType;
@@ -197,7 +197,7 @@ int writeOctHexToMem(char **str, token *tok, int base);
 void intConverter(token *tok, long long int result);
 void floatConverter(token *tok, long double result);
 void unsignedConverter(token *tok, unsigned long long int result);
-unsigned long long int strntollu(const char *str, char **endptr, int basis,
+unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
                                  int n_byte);
 
 #ifdef __APPLE__

@@ -3,7 +3,7 @@
 int s21_sscanf(const char *str, const char *format, ...) {
   int errCode = checkEOFString(str);
 
-  if (errCode == OK) {
+  if (errCode == _OK) {
     va_list va;
     va_start(va, format);
     int tokenLen = 0;
@@ -36,11 +36,11 @@ int isLetter(char c) {
 int isDigit(char c) { return c >= '0' && c <= '9'; }
 
 int checkEOFString(const char *str) {
-  int result = ERROR;
+  int result = _ERROR;
 
   for (s21_size_t i = 0; str[i]; i++) {
     if (!isSpace(str[i]) && str[i] != '\0') {
-      result = OK;
+      result = _OK;
       break;
     }
   }
@@ -159,39 +159,42 @@ int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen) {
   int errCode = 0;
   char *start = *strPtr;
 
-  for (s21_size_t i = 0; i < tokenLen; i++) {
+  for (int i = 0; i < tokenLen; i++) {
     char spec = tokens[i].spec;
 
-    if (spec == 'c')
+    if (spec == 'c') {
       errCode = writeCharToMem(strPtr, &tokens[i]);
-    else if (spec == 'd')
+	} else if (spec == 'd') {
       errCode = writeIntToMem(strPtr, &tokens[i]);
-    else if (spec == 'g', spec == 'G', spec == 'f')
+	} else if (spec == 'g' || spec == 'G' || spec == 'f') {
       errCode = writeFloatToMem(strPtr, &tokens[i]);
-    else if (spec == 's')
+	} else if (spec == 's') {
       errCode = writeStringToMem(strPtr, &tokens[i]);
-    else if (spec == 'z')
+	} else if (spec == 'z') {
       skipSpaces(strPtr);
-    else if (spec == 'u')
+	} else if (spec == 'u') {
       errCode = writeUnsignedToMem(strPtr, &tokens[i]);
-    else if (spec == 'b')
+	} else if (spec == 'b') {
       skipCharsInBuffer(strPtr, &tokens[i]);
-    else if (spec == 'n')
+	} else if (spec == 'n') {
       *((int *)tokens[i].address) = (*strPtr) - start;
-    else if (spec == 'i' || spec == 'p')
+	} else if (spec == 'i' || spec == 'p') {
       errCode = writeUnspecToMem(strPtr, &tokens[i]);
-    else if (spec == 'x' || spec == 'X')
+	} else if (spec == 'x' || spec == 'X') {
       errCode = writeOctHexToMem(strPtr, &tokens[i], 16);
-    else if (spec == 'o')
+	} else if (spec == 'o') {
       errCode = writeOctHexToMem(strPtr, &tokens[i], 8);
+	}
   }
+
+  return errCode;
 }
 
 int writeCharToMem(char **str, token *tok) {
-  int codeErr = ERROR;
+  int codeErr = _ERROR;
 
   if (**str) {
-    codeErr = OK;
+    codeErr = _OK;
 
     if (tok->width == WIDTH_STAR) {
       (*str)++;
@@ -205,7 +208,7 @@ int writeCharToMem(char **str, token *tok) {
 }
 
 int writeStringToMem(char **str, token *tok) {
-  int codeErr = ERROR;
+  int codeErr = _ERROR;
   s21_size_t i = 0;
   char buffer[BUFF_SIZE] = {0};
   int isStr = 0;
@@ -249,7 +252,7 @@ int writeStringToMem(char **str, token *tok) {
 
 int writeIntToMem(char **str, token *tok) {
   long long int result = 0;
-  int codeErr = ERROR;
+  int codeErr = _ERROR;
   char buffer[BUFF_SIZE] = {0};
 
   if (s21_strspn(*str, "0987654321+-")) {
@@ -260,18 +263,18 @@ int writeIntToMem(char **str, token *tok) {
       buffer[0] = **str;
       (*str)++;
       writeAcceptToBuffer(str, "0987654321", buffer, tok->width, 1);
-      codeErr = OK;
+      codeErr = _OK;
     }
   }
 
   result = s21_atoi(buffer);
 
-  if (tok->spec == 'p' && tok->width != WIDTH_STAR && codeErr == OK) {
+  if (tok->spec == 'p' && tok->width != WIDTH_STAR && codeErr == _OK) {
     unsigned long long int result =
         s21_strntollu(buffer, s21_NULL, 16, s21_strlen(buffer));
     *(int *)tok->address = (int)result;
   } else {
-    if (tok->widthType != WIDTH_STAR && codeErr == OK) {
+    if (tok->widthType != WIDTH_STAR && codeErr == _OK) {
       intConverter(tok, result);
     }
   }
@@ -315,7 +318,7 @@ void intConverter(token *tok, long long int result) {
 }
 
 int skipCharsInBuffer(char **str, token *tok) {
-  int errCode = OK;
+  int errCode = _OK;
 
   int test = s21_strspn(*str, tok->buffer);
   int len = s21_strlen(tok->buffer);
@@ -324,7 +327,7 @@ int skipCharsInBuffer(char **str, token *tok) {
     (*str) = (*str) + len;
   } else {
     if (test != len) {
-      errCode = ERROR;
+      errCode = _ERROR;
     } else {
       (*str) = (*str) + len;
     }
@@ -334,6 +337,7 @@ int skipCharsInBuffer(char **str, token *tok) {
 }
 
 int writeFloatToMem(char **str, token *tok) {
+  int errCode = _ERROR;
   int acceptCheck = 0;
 
   if (tok->spec == 'f') {
@@ -368,6 +372,8 @@ int writeFloatToMem(char **str, token *tok) {
         long double result = strtold(buffer, s21_NULL);
         floatConverter(tok, result);
       }
+
+	  errCode = _OK;
     }
   }
 
@@ -378,6 +384,8 @@ int writeFloatToMem(char **str, token *tok) {
       writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFn", s21_NULL, 0, 0);
     }
   }
+
+  return errCode;
 }
 
 void floatConverter(token *tok, long double result) {
@@ -391,7 +399,7 @@ void floatConverter(token *tok, long double result) {
 }
 
 int writeUnsignedToMem(char **str, token *tok) {
-  int errCode = ERROR;
+  int errCode = _ERROR;
 
   skipSpaces(str);
 
@@ -405,13 +413,13 @@ int writeUnsignedToMem(char **str, token *tok) {
       (*str)++;
 
       writeAcceptToBuffer(str, "0987654321", buffer, tok->width, 1);
-      errCode = OK;
+      errCode = _OK;
     }
   }
 
   unsigned long long int result = s21_atoi(buffer);
 
-  if (tok->widthType != WIDTH_STAR && errCode != ERROR) {
+  if (tok->widthType != WIDTH_STAR && errCode != _ERROR) {
     unsignedConverter(tok, result);
   }
 
@@ -419,7 +427,7 @@ int writeUnsignedToMem(char **str, token *tok) {
     writeAcceptToBuffer(str, "0123456789", s21_NULL, 0, 0);
   }
 
-  return ERROR;
+  return _ERROR;
 }
 
 void unsignedConverter(token *tok, unsigned long long int result) {
@@ -435,7 +443,7 @@ void unsignedConverter(token *tok, unsigned long long int result) {
 }
 
 int writeOctHexToMem(char **str, token *tok, int base) {
-  int errCode = OK;
+  int errCode = _OK;
   int sign = 1;
   char *ptr = s21_NULL;
 
@@ -469,7 +477,7 @@ int writeOctHexToMem(char **str, token *tok, int base) {
       }
     }
   } else {
-    errCode = ERROR;
+    errCode = _ERROR;
   }
 
   unsigned int acceptCount =
@@ -531,19 +539,24 @@ unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
 }
 
 int writeUnspecToMem(char **str, token *tok) {
-  int errCode = ERROR;
+  int errCode = _ERROR;
   skipSpaces(str);
 
   if (s21_strspn(*str, "0x") == 2) {
-    errCode = OK;
+    errCode = _OK;
     writeOctHexToMem(str, tok, 16);
   } else if (s21_strspn(*str, "0") == 1) {
-    errCode = OK;
+    errCode = _OK;
     writeOctHexToMem(str, tok, 8);
   } else if (s21_strspn(*str, "+-0123456789")) {
-    errCode = OK;
+    errCode = _OK;
     writeIntToMem(str, tok);
   }
 
   return errCode;
+}
+
+int main() {
+	int a = 1;
+	(void)a;
 }
