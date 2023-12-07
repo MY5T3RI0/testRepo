@@ -161,6 +161,7 @@ void format_char(char *str, FORMAT *form, va_list arg, int *j);
 void format_string(char *str, FORMAT *form, va_list arg, int *j);
 void format_percent(char *str, int *j);
 void format_float(char *str, FORMAT *form, va_list arg, int *j);
+void format_double(char *str, FORMAT *form, va_list arg, int *j);
 char *upper(char *str);
 void set_nulls(char *str, FORMAT *form);
 int g_selector(int p, int x);

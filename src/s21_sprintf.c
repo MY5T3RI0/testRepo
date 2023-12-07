@@ -41,7 +41,10 @@ void format_spec(char* str, FORMAT* form, va_list arg, int* j) {
   } else if (form->specifier & spec_u) {
     format_unsigned(str, form, arg, j);
   } else if (is_float(form)) {
-    format_float(str, form, arg, j);
+    if (form->len & len_L)
+      format_double(str, form, arg, j);
+    else
+      format_float(str, form, arg, j);
   } else if (is_nradix(form)) {
     format_nradix(str, form, arg, j);
   } else if (form->specifier & spec_s) {
@@ -96,9 +99,10 @@ void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
   for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
+  shift += num_size;
   for (int i = 0; i < width && (form->flags & flag_minus); i++)
     str[shift++] = ' ';
-  (*j) += num_size + shift;
+  (*j) += shift;
 }
 
 void format_float(char* str, FORMAT* form, va_list arg, int* j) {
@@ -106,7 +110,60 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   int notation = 0;
   double num = va_arg(arg, double);
   int positive_notation = 1;
-  if (!(form->len & len_L)) num = (double)num;
+  double temp = num;
+  char buff[30] = {0};
+
+  notation = calculate_notation(notation, &temp, &positive_notation);
+  form->precision = form->is_precision ? form->precision : 6;
+  int total_notation = notation * (positive_notation ? 1 : -1);
+
+  if (form->specifier & (spec_g | spec_G) && !(form->is_precision))
+    calculate_precision(form, total_notation, form->precision);
+  if (form->specifier & spec_e || form->specifier & spec_E) num = temp;
+
+  s21_size_t num_size = s21_ftoa(num, buff, form->precision);
+  s21_size_t precision =
+      num_size > form->precision ? num_size : form->precision;
+  int width = form->width - precision;
+  if (form->flags & flag_plus || form->flags & flag_space) width--;
+
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = form->flags & flag_0 && !(form->is_precision) ? '0' : ' ';
+
+  if (form->flags & flag_plus && num > 0)
+    str[shift++] = '+';
+  else if (form->flags & flag_space && num > 0)
+    str[shift++] = ' ';
+
+  s21_size_t nulls_count =
+      form->precision >= num_size ? form->precision - num_size : 0;
+  for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
+
+  if (form->specifier & (spec_G | spec_g)) set_nulls(buff, form);
+
+  s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
+  shift += s21_strlen(buff);
+
+  if (form->is_precision && form->flags & flag_sharp && form->precision == 0)
+    str[shift++] = '.';
+
+  if (form->specifier & spec_e || form->specifier & spec_E) {
+    str[shift++] = form->specifier & spec_e ? 'e' : 'E';
+    str[shift++] = positive_notation ? '+' : '-';
+    if (notation < 10) str[shift++] = '0';
+    shift += s21_itoa(notation, &(str[shift]), 10);
+  }
+
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
+  (*j) += shift;
+}
+
+void format_double(char* str, FORMAT* form, va_list arg, int* j) {
+  int shift = 0;
+  int notation = 0;
+  long double num = va_arg(arg, long double);
+  int positive_notation = 1;
   double temp = num;
   char buff[30] = {0};
 
@@ -188,9 +245,10 @@ void format_decimal(char* str, FORMAT* form, va_list arg, int* j) {
     str[shift++] = ' ';
 
   s21_strncpy(&(str[shift]), buff, num_size);
+  shift += num_size;
   for (int i = 0; i < width && (form->flags & flag_minus); i++)
     str[shift++] = ' ';
-  (*j) += num_size + shift;
+  (*j) += shift;
 }
 
 void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
@@ -218,9 +276,10 @@ void format_unsigned(char* str, FORMAT* form, va_list arg, int* j) {
   for (s21_size_t i = 0; i < nulls_count; i++) str[shift++] = '0';
 
   s21_strncpy(&(str[shift]), buff, num_size);
+  shift += num_size;
   for (int i = 0; i < width && (form->flags & flag_minus); i++)
     str[shift++] = ' ';
-  (*j) += num_size + shift;
+  (*j) += shift;
 }
 
 void format_pointer(char* str, FORMAT* form, va_list arg, int* j) {
@@ -383,9 +442,6 @@ void get_specifier(FORMAT* form, char sym, int* i) {
       break;
     case 'p':
       form->specifier |= spec_p;
-      break;
-    case 'n':
-      form->specifier |= spec_n;
       break;
     case '%':
       form->specifier |= spec_percent;
