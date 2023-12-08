@@ -167,6 +167,7 @@ void set_nulls(char *str, FORMAT *form);
 int g_selector(int p, int x);
 int calculate_notation(int notation, double *temp, int *positive_notation);
 void calculate_precision(FORMAT *form, int total_notation, int total_precision);
+int is_bonus_point(FORMAT *form);
 
 // scanf functions
 int s21_sscanf(const char *str, const char *format, ...);

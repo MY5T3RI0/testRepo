@@ -106,18 +106,15 @@ void format_nradix(char* str, FORMAT* form, va_list arg, int* j) {
 }
 
 void format_float(char* str, FORMAT* form, va_list arg, int* j) {
-  int shift = 0;
-  int notation = 0;
-  double num = va_arg(arg, double);
-  int positive_notation = 1;
-  double temp = num;
+  int shift = 0, notation = 0, positive_notation = 1;
+  double num = va_arg(arg, double), temp = num;
   char buff[30] = {0};
 
   notation = calculate_notation(notation, &temp, &positive_notation);
   form->precision = form->is_precision ? form->precision : 6;
   int total_notation = notation * (positive_notation ? 1 : -1);
 
-  if (form->specifier & (spec_g | spec_G) && !(form->is_precision))
+  if (form->specifier & (spec_g | spec_G))
     calculate_precision(form, total_notation, form->precision);
   if (form->specifier & spec_e || form->specifier & spec_E) num = temp;
 
@@ -125,6 +122,8 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   s21_size_t precision =
       num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
+  if (form->specifier & spec_e || form->specifier & spec_E) width -= 4;
+  if (is_bonus_point(form)) width -= 1;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
   for (int i = 0; i < width && !(form->flags & flag_minus); i++)
@@ -144,8 +143,7 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
   shift += s21_strlen(buff);
 
-  if (form->is_precision && form->flags & flag_sharp && form->precision == 0)
-    str[shift++] = '.';
+  if (is_bonus_point(form)) str[shift++] = '.';
 
   if (form->specifier & spec_e || form->specifier & spec_E) {
     str[shift++] = form->specifier & spec_e ? 'e' : 'E';
@@ -160,18 +158,15 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
 }
 
 void format_double(char* str, FORMAT* form, va_list arg, int* j) {
-  int shift = 0;
-  int notation = 0;
-  long double num = va_arg(arg, long double);
-  int positive_notation = 1;
-  double temp = num;
+  int shift = 0, notation = 0, positive_notation = 1;
+  long double num = va_arg(arg, long double), temp = num;
   char buff[30] = {0};
 
   notation = calculate_notation(notation, &temp, &positive_notation);
   form->precision = form->is_precision ? form->precision : 6;
   int total_notation = notation * (positive_notation ? 1 : -1);
 
-  if (form->specifier & (spec_g | spec_G) && !(form->is_precision))
+  if (form->specifier & (spec_g | spec_G))
     calculate_precision(form, total_notation, form->precision);
   if (form->specifier & spec_e || form->specifier & spec_E) num = temp;
 
@@ -179,6 +174,8 @@ void format_double(char* str, FORMAT* form, va_list arg, int* j) {
   s21_size_t precision =
       num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
+  if (form->specifier & spec_e || form->specifier & spec_E) width -= 4;
+  if (is_bonus_point(form)) width -= 1;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
   for (int i = 0; i < width && !(form->flags & flag_minus); i++)
@@ -198,8 +195,7 @@ void format_double(char* str, FORMAT* form, va_list arg, int* j) {
   s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
   shift += s21_strlen(buff);
 
-  if (form->is_precision && form->flags & flag_sharp && form->precision == 0)
-    str[shift++] = '.';
+  if (is_bonus_point(form)) str[shift++] = '.';
 
   if (form->specifier & spec_e || form->specifier & spec_E) {
     str[shift++] = form->specifier & spec_e ? 'e' : 'E';
@@ -634,4 +630,8 @@ void calculate_precision(FORMAT* form, int total_notation,
     form->is_precision = 1;
     form->precision = total_precision - (total_notation + 1);
   }
+}
+
+int is_bonus_point(FORMAT* form) {
+  return form->is_precision && form->flags & flag_sharp && form->precision == 0;
 }
