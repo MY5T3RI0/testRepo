@@ -167,22 +167,17 @@ int g_selector(int p, int x);
 int calculate_notation(int notation, double *temp, int *positive_notation);
 void calculate_precision(FORMAT *form, int total_notation, int total_precision);
 
-// scanf functions
+// sscanf functions
 int s21_sscanf(const char *str, const char *format, ...);
 
-int isSpace(char c);
-int isLetter(char c);
-int isDigit(char c);
-int checkEOFString(const char *str);
-int skipCharsInBuffer(char **str, token *tok);
-
+//sscanf parsers
 token parseToken(char **formatPtr, va_list *va);
-void skipSpaces(char **str);
 void parseWidth(char **formatPtr, token *result);
 int parseNumber(char **formatPtr);
 void parseLength(char **formatPtr, token *result);
 void parseSpecifier(char **formatPtr, token *result);
 
+//sscanf memory writers
 int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen);
 int writeCharToMem(char **str, token *tok);
 int writeStringToMem(char **str, token *tok);
@@ -194,18 +189,32 @@ int writeUnsignedToMem(char **str, token *tok);
 int writeUnspecToMem(char **str, token *tok);
 int writeOctHexToMem(char **str, token *tok, int base);
 
+//sscanf type converters
 void intConverter(token *tok, long long int result);
 void floatConverter(token *tok, long double result);
+
 void unsignedConverter(token *tok, unsigned long long int result);
 unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
                                  int n_byte);
+
+// sscanf support function 
+int isSpace(char c);
+int isLetter(char c);
+int isDigit(char c);
+int checkEOFString(const char *str);
+int skipCharsInBuffer(char **str, token *tok);
+void skipSpaces(char **str);
+
 long double s21_strtold(const char *buffer);
-int includesExponent(const char *buffer);
+//support function for s21_strtold
 long double s21_atof(const char *buffer);
+int includesExponent(const char *buffer);
 long double applyExponent(long double result, const char *buffer) ;
 long double returnInfOrNan(const char *buffer) ;
 int includesInfOrNan(const char *buffer) ;
 int caseInsnsSearch(const char *buffer, const char *pat);
+
+
 
 #ifdef __APPLE__
 #define ERR_MAX 107

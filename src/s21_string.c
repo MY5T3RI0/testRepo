@@ -197,3 +197,142 @@ char *s21_strcpy(char *dest, const char *src) {
     return dest;
 }
 
+long double s21_strtold(const char *buffer) {
+    long double result = 0.0;
+    int includesInfNan = includesInfOrNan(buffer);
+
+    if (!includesInfNan) {
+        result = s21_atof(buffer);
+
+        if (includesExponent(buffer)) {
+            result = applyExponent(result, buffer);
+        }
+    }
+
+    return (includesInfNan) ? returnInfOrNan(buffer) : result;
+}
+
+
+int caseInsnsSearch(const char *buffer, const char *pat) {
+    int isFound = 0;
+    int len = (int)s21_strlen(pat);
+
+    for (int i = 0; buffer[i] && !isFound; i++) {
+        int counter = 0;
+        for (int j = 0; j < len && !isFound; j++) {
+            if ((buffer[i] == (pat[j] - 'A') + 'a') || (buffer[i] == (pat[j] - 'a') + 'A') || pat[j] == buffer[i]) {
+                counter++;
+                i++;
+            }
+
+            if (len == counter) {
+                isFound = 1;
+            }
+        }
+    }
+
+    return isFound;
+}
+
+int includesInfOrNan(const char *buffer) {
+    int result = 0;
+
+    int checkInf = caseInsnsSearch(buffer, "inf");
+    int checkNan = caseInsnsSearch(buffer, "nan");
+
+    if (checkInf || checkNan) {
+        result = 1;
+    }
+
+    return result;
+}
+
+long double returnInfOrNan(const char *buffer) {
+    int res = 0;
+	int isFound = 0;
+
+    for (int i = 0; buffer[i] && !isFound; i++) {
+        if (buffer[i] == 'i' || buffer[i] == 'I') {
+            res = 1;
+            isFound = 1;
+        }
+    }
+
+    return (res == 1) ? INFINITY : NAN;
+}
+
+
+long double applyExponent(long double result, const char *buffer) {
+    char sign = '+';
+    int exponent = 0;
+
+    for (char *buffPtr = (char *)buffer; *buffPtr; buffPtr++) {
+        if (*buffPtr == 'e' || *buffPtr == 'E') {
+            sign = *(buffPtr + 1);
+            exponent = s21_atoi(buffPtr + 2);
+        }
+    }
+
+    while (exponent) {
+        if (sign == '-') {
+            result /= 10.0;
+        } else {
+            result *= 10.0;
+        }
+
+        exponent--;
+    }
+
+    return result;
+}
+
+int includesExponent(const char *buffer) {
+    int result = 0;
+
+    for (char *p = (char*)buffer; *p && !result; p++) {
+        if (s21_strspn(p, "eE")) {
+            result = 1;
+        }
+    }
+
+    return result;
+}
+
+long double s21_atof(const char *buffer) {
+    long double frac = 0.0;
+    char *buffPtr = (char*)buffer;
+
+    int minus_sign = (*buffPtr == '-');
+
+    if (*buffPtr == '-' || *buffPtr == '+') {
+        buffPtr++;
+	}
+
+    long double result = s21_atoi(buffPtr);
+
+    while (isDigit(*buffPtr))
+        buffPtr++;
+
+    if (*buffPtr == '.') {
+        buffPtr++;
+        //! вашему вниманию танцы с бубнами с 123.000001
+
+        int trailing_zeros = s21_strspn(buffPtr, "0");
+        frac = s21_atoi(buffPtr);
+        int temp = (int)frac;
+
+        while (temp) {
+            frac /= 10.0;
+            temp /= 10;
+        }
+
+        while (trailing_zeros) {
+            frac /= 10.0;
+            trailing_zeros--;
+        }
+    }
+
+    result += frac;
+
+    return minus_sign ? -result : result;
+}
