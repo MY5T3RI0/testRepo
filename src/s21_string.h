@@ -199,6 +199,13 @@ void floatConverter(token *tok, long double result);
 void unsignedConverter(token *tok, unsigned long long int result);
 unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
                                  int n_byte);
+long double s21_strtold(const char *buffer);
+int includesExponent(const char *buffer);
+long double s21_atof(const char *buffer);
+long double applyExponent(long double result, const char *buffer) ;
+long double returnInfOrNan(const char *buffer) ;
+int includesInfOrNan(const char *buffer) ;
+int caseInsnsSearch(const char *buffer, const char *pat);
 
 #ifdef __APPLE__
 #define ERR_MAX 107

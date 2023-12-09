@@ -1,4 +1,5 @@
 #include "s21_string.h"
+#include <stdio.h>
 
 int s21_sscanf(const char *str, const char *format, ...) {
   int errCode = checkEOFString(str);
@@ -166,7 +167,7 @@ int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen) {
       errCode = writeCharToMem(strPtr, &tokens[i]);
 	} else if (spec == 'd') {
       errCode = writeIntToMem(strPtr, &tokens[i]);
-	} else if (spec == 'g' || spec == 'G' || spec == 'f') {
+	} else if (spec == 'g' || spec == 'G' || spec == 'f' || spec == 'e' || spec == 'E') {
       errCode = writeFloatToMem(strPtr, &tokens[i]);
 	} else if (spec == 's') {
       errCode = writeStringToMem(strPtr, &tokens[i]);
@@ -215,7 +216,7 @@ int writeStringToMem(char **str, token *tok) {
   int isEndOfString = 0;
 
   while (**str &&
-         !isStr)  // пока строка не закончилась и он не нашел начало слова
+         !isStr)  
   {
     if (!isSpace(**str)) {
       isStr = 1;
@@ -369,7 +370,7 @@ int writeFloatToMem(char **str, token *tok) {
       }
 
       if (tok->widthType != WIDTH_STAR) {
-        long double result = strtold(buffer, s21_NULL);
+        long double result = s21_strtold(buffer);
         floatConverter(tok, result);
       }
 
@@ -556,7 +557,153 @@ int writeUnspecToMem(char **str, token *tok) {
   return errCode;
 }
 
-int main() {
-	int a = 1;
-	(void)a;
+long double s21_strtold(const char *buffer) {
+    long double result = 0.0;
+    int includesInfNan = includesInfOrNan(buffer);
+
+    if (!includesInfNan) {
+        result = s21_atof(buffer);
+
+        if (includesExponent(buffer)) {
+            result = applyExponent(result, buffer);
+        }
+    }
+
+    return (includesInfNan) ? returnInfOrNan(buffer) : result;
 }
+
+
+int caseInsnsSearch(const char *buffer, const char *pat) {
+    int isFound = 0;
+    int len = (int)s21_strlen(pat);
+
+    for (int i = 0; buffer[i] && !isFound; i++) {
+        int counter = 0;
+        for (int j = 0; j < len && !isFound; j++) {
+            if ((buffer[i] == (pat[j] - 'A') + 'a') || (buffer[i] == (pat[j] - 'a') + 'A') || pat[j] == buffer[i]) {
+                counter++;
+                i++;
+            }
+
+            if (len == counter) {
+                isFound = 1;
+            }
+        }
+    }
+
+    return isFound;
+}
+
+int includesInfOrNan(const char *buffer) {
+    int result = 0;
+
+    int checkInf = caseInsnsSearch(buffer, "inf");
+    int checkNan = caseInsnsSearch(buffer, "nan");
+
+    if (checkInf || checkNan) {
+        result = 1;
+    }
+
+    return result;
+}
+
+long double returnInfOrNan(const char *buffer) {
+    int res = 0;
+	int isFound = 0;
+
+    for (int i = 0; buffer[i] && !isFound; i++) {
+        if (buffer[i] == 'i' || buffer[i] == 'I') {
+            res = 1;
+            isFound = 1;
+        }
+    }
+
+    return (res == 1) ? INFINITY : NAN;
+}
+
+
+long double applyExponent(long double result, const char *buffer) {
+    char sign = '+';
+    int exponent = 0;
+
+    for (char *buffPtr = (char *)buffer; *buffPtr; buffPtr++) {
+        if (*buffPtr == 'e' || *buffPtr == 'E') {
+            sign = *(buffPtr + 1);
+            exponent = s21_atoi(buffPtr + 2);
+        }
+    }
+
+    while (exponent) {
+        if (sign == '-') {
+            result /= 10.0;
+        } else {
+            result *= 10.0;
+        }
+
+        exponent--;
+    }
+
+    return result;
+}
+
+int includesExponent(const char *buffer) {
+    int result = 0;
+
+    for (char *p = (char*)buffer; *p && !result; p++) {
+        if (s21_strspn(p, "eE")) {
+            result = 1;
+        }
+    }
+
+    return result;
+}
+
+long double s21_atof(const char *buffer) {
+    long double frac = 0.0;
+    char *buffPtr = (char*)buffer;
+
+    int minus_sign = (*buffPtr == '-');
+
+    if (*buffPtr == '-' || *buffPtr == '+') {
+        buffPtr++;
+	}
+
+    long double result = s21_atoi(buffPtr);
+
+    while (isDigit(*buffPtr))
+        buffPtr++;
+
+    if (*buffPtr == '.') {
+        buffPtr++;
+        //! вашему вниманию танцы с бубнами с 123.000001
+
+        int trailing_zeros = s21_strspn(buffPtr, "0");
+        frac = s21_atoi(buffPtr);
+        int temp = (int)frac;
+
+        while (temp) {
+            frac /= 10.0;
+            temp /= 10;
+        }
+
+        while (trailing_zeros) {
+            frac /= 10.0;
+            trailing_zeros--;
+        }
+    }
+
+    result += frac;
+
+    return minus_sign ? -result : result;
+}
+
+// int main() {
+// 	char str[] = "123.3434 12333.0000001";
+
+// 	double d1;
+// 	long double d2;
+
+// 	s21_sscanf(str, "%le %Le", &d1, &d2);
+
+// 	printf("%le %Le", d1, d2);
+// }
