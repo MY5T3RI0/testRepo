@@ -3,7 +3,7 @@
         {
             "label": "Build",
             "type": "shell",
-            "command": "make rebuild",
+            "command": "cd src; make rebuild",
             "group": "build",
             "problemMatcher": []
         },

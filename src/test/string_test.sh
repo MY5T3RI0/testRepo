@@ -45,7 +45,9 @@ function clear_vars {
 	func_num=0
 }
 
+cd ..
 make rebuild
+cd test
 
 for test in `seq $[ $1 * 15 ]`
 do

@@ -161,23 +161,25 @@ void format_char(char *str, FORMAT *form, va_list arg, int *j);
 void format_string(char *str, FORMAT *form, va_list arg, int *j);
 void format_percent(char *str, int *j);
 void format_float(char *str, FORMAT *form, va_list arg, int *j);
+void format_double(char *str, FORMAT *form, va_list arg, int *j);
 char *upper(char *str);
 void set_nulls(char *str, FORMAT *form);
 int g_selector(int p, int x);
-int calculate_notation(int notation, double *temp, int *positive_notation);
+int calculate_notation(int notation, long double *temp, int *positive_notation);
 void calculate_precision(FORMAT *form, int total_notation, int total_precision);
+int is_bonus_point(FORMAT *form);
 
 // sscanf functions
 int s21_sscanf(const char *str, const char *format, ...);
 
-//sscanf parsers
+// sscanf parsers
 token parseToken(char **formatPtr, va_list *va);
 void parseWidth(char **formatPtr, token *result);
 int parseNumber(char **formatPtr);
 void parseLength(char **formatPtr, token *result);
 void parseSpecifier(char **formatPtr, token *result);
 
-//sscanf memory writers
+// sscanf memory writers
 int writeTokensToMemory(char **strPtr, token *tokens, int tokenLen);
 int writeCharToMem(char **str, token *tok);
 int writeStringToMem(char **str, token *tok);
@@ -189,15 +191,15 @@ int writeUnsignedToMem(char **str, token *tok);
 int writeUnspecToMem(char **str, token *tok);
 int writeOctHexToMem(char **str, token *tok, int base);
 
-//sscanf type converters
+// sscanf type converters
 void intConverter(token *tok, long long int result);
 void floatConverter(token *tok, long double result);
 
 void unsignedConverter(token *tok, unsigned long long int result);
 unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
-                                 int n_byte);
+                                     int n_byte);
 
-// sscanf support function 
+// sscanf support function
 int isSpace(char c);
 int isLetter(char c);
 int isDigit(char c);
@@ -206,15 +208,13 @@ int skipCharsInBuffer(char **str, token *tok);
 void skipSpaces(char **str);
 
 long double s21_strtold(const char *buffer);
-//support function for s21_strtold
+// support function for s21_strtold
 long double s21_atof(const char *buffer);
 int includesExponent(const char *buffer);
-long double applyExponent(long double result, const char *buffer) ;
-long double returnInfOrNan(const char *buffer) ;
-int includesInfOrNan(const char *buffer) ;
+long double applyExponent(long double result, const char *buffer);
+long double returnInfOrNan(const char *buffer);
+int includesInfOrNan(const char *buffer);
 int caseInsnsSearch(const char *buffer, const char *pat);
-
-
 
 #ifdef __APPLE__
 #define ERR_MAX 107

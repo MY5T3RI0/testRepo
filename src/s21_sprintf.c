@@ -110,7 +110,8 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   double num = va_arg(arg, double), temp = num;
   char buff[30] = {0};
 
-  notation = calculate_notation(notation, &temp, &positive_notation);
+  notation =
+      calculate_notation(notation, (long double*)&temp, &positive_notation);
   form->precision = form->is_precision ? form->precision : 6;
   int total_notation = notation * (positive_notation ? 1 : -1);
 
@@ -493,99 +494,6 @@ void get_width(FORMAT* form, char* format, int* i, va_list arg) {
   }
 }
 
-int s21_atoi(char* str) {
-  s21_size_t len = s21_strspn(str, NUMS_STR);
-  int res = 0;
-  int state = 1;
-
-  for (s21_size_t i = 0; i < len && state; i++) {
-    if (str[i] < '0' || str[i] > '9')
-      state = 0;
-    else
-      res += (str[i] - '0') * pow(10, len - i - 1);
-  }
-
-  return res;
-}
-
-s21_size_t s21_itoa(long long num, char* str, int radix) {
-  char buff[25] = {0};
-  char nums[] = "0123456789abcdef";
-  if (num < 0) {
-    str[0] = '-';
-    num *= -1;
-  }
-  if (num == 0)
-    buff[0] = '0';
-  else
-    for (int i = 0; num != 0; i++) {
-      buff[i] = nums[num % radix];
-      num /= radix;
-    }
-
-  s21_size_t len = s21_strlen(buff);
-
-  for (s21_size_t i = 0; i < len; i++)
-    str[str[0] == '-' ? i + 1 : i] = buff[len - i - 1];
-
-  return str[0] == '-' ? len + 1 : len;
-}
-
-s21_size_t s21_utoa(unsigned long long num, char* str, int radix) {
-  char buff[25] = {0};
-  char nums[] = "0123456789abcdef";
-
-  for (int i = 0; num != 0; i++) {
-    buff[i] = nums[num % radix];
-    num /= radix;
-  }
-
-  s21_size_t len = s21_strlen(buff);
-
-  for (s21_size_t i = 0; i < len; i++) str[i] = buff[len - i - 1];
-
-  return len;
-}
-
-s21_size_t s21_ftoa(long double num, char* str, size_t precision) {
-  long double x, y;
-  s21_size_t res = 0;
-  if (num < 0) {
-    str[res++] = '-';
-    num *= -1;
-  }
-  y = modfl(num, &x);
-  char buff[25] = {0};
-
-  res += s21_itoa(x, &(str[res]), 10);
-  if (precision > 0) {
-    str[res++] = '.';
-    s21_size_t float_size = s21_itoa(roundl(y * pow(10, precision)), buff, 10);
-    if (float_size < precision) {
-      s21_memset(&(str[res]), '0', precision - float_size);
-      res += precision - float_size;
-    }
-    s21_strncpy(&(str[res]), buff, float_size);
-    res += float_size;
-  }
-
-  return res;
-}
-
-char* upper(char* str) {
-  if (!str) return s21_NULL;
-  s21_size_t len = s21_strlen(str);
-
-  for (s21_size_t i = 0; i < len; i++) {
-    if (str[i] >= 'a' && str[i] <= 'z')
-      str[i] = str[i] + 'A' - 'a';
-    else
-      str[i] = str[i];
-  }
-
-  return str;
-}
-
 void set_nulls(char* str, FORMAT* form) {
   s21_size_t len = s21_strlen(str);
   int is_end = 0;
@@ -606,7 +514,8 @@ void set_nulls(char* str, FORMAT* form) {
 
 int g_selector(int p, int x) { return p > x && x >= -4; }
 
-int calculate_notation(int notation, double* temp, int* positive_notation) {
+int calculate_notation(int notation, long double* temp,
+                       int* positive_notation) {
   while (*temp > 10) {
     *temp /= 10;
     notation++;

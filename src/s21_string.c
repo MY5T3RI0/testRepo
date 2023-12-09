@@ -188,151 +188,242 @@ s21_size_t s21_strspn(const char *str1, const char *str2) {
 }
 
 char *s21_strcpy(char *dest, const char *src) {
-    for (int i = 0; src[i]; i++) {
-        dest[i] = src[i];
-    }
+  for (int i = 0; src[i]; i++) {
+    dest[i] = src[i];
+  }
 
-    dest[s21_strlen(src)] = '\0';
+  dest[s21_strlen(src)] = '\0';
 
-    return dest;
+  return dest;
 }
 
 long double s21_strtold(const char *buffer) {
-    long double result = 0.0;
-    int includesInfNan = includesInfOrNan(buffer);
+  long double result = 0.0;
+  int includesInfNan = includesInfOrNan(buffer);
 
-    if (!includesInfNan) {
-        result = s21_atof(buffer);
+  if (!includesInfNan) {
+    result = s21_atof(buffer);
 
-        if (includesExponent(buffer)) {
-            result = applyExponent(result, buffer);
-        }
+    if (includesExponent(buffer)) {
+      result = applyExponent(result, buffer);
     }
+  }
 
-    return (includesInfNan) ? returnInfOrNan(buffer) : result;
+  return (includesInfNan) ? returnInfOrNan(buffer) : result;
 }
 
-
 int caseInsnsSearch(const char *buffer, const char *pat) {
-    int isFound = 0;
-    int len = (int)s21_strlen(pat);
+  int isFound = 0;
+  int len = (int)s21_strlen(pat);
 
-    for (int i = 0; buffer[i] && !isFound; i++) {
-        int counter = 0;
-        for (int j = 0; j < len && !isFound; j++) {
-            if ((buffer[i] == (pat[j] - 'A') + 'a') || (buffer[i] == (pat[j] - 'a') + 'A') || pat[j] == buffer[i]) {
-                counter++;
-                i++;
-            }
+  for (int i = 0; buffer[i] && !isFound; i++) {
+    int counter = 0;
+    for (int j = 0; j < len && !isFound; j++) {
+      if ((buffer[i] == (pat[j] - 'A') + 'a') ||
+          (buffer[i] == (pat[j] - 'a') + 'A') || pat[j] == buffer[i]) {
+        counter++;
+        i++;
+      }
 
-            if (len == counter) {
-                isFound = 1;
-            }
-        }
+      if (len == counter) {
+        isFound = 1;
+      }
     }
+  }
 
-    return isFound;
+  return isFound;
 }
 
 int includesInfOrNan(const char *buffer) {
-    int result = 0;
+  int result = 0;
 
-    int checkInf = caseInsnsSearch(buffer, "inf");
-    int checkNan = caseInsnsSearch(buffer, "nan");
+  int checkInf = caseInsnsSearch(buffer, "inf");
+  int checkNan = caseInsnsSearch(buffer, "nan");
 
-    if (checkInf || checkNan) {
-        result = 1;
-    }
+  if (checkInf || checkNan) {
+    result = 1;
+  }
 
-    return result;
+  return result;
 }
 
 long double returnInfOrNan(const char *buffer) {
-    int res = 0;
-	int isFound = 0;
+  int res = 0;
+  int isFound = 0;
 
-    for (int i = 0; buffer[i] && !isFound; i++) {
-        if (buffer[i] == 'i' || buffer[i] == 'I') {
-            res = 1;
-            isFound = 1;
-        }
+  for (int i = 0; buffer[i] && !isFound; i++) {
+    if (buffer[i] == 'i' || buffer[i] == 'I') {
+      res = 1;
+      isFound = 1;
     }
+  }
 
-    return (res == 1) ? INFINITY : NAN;
+  return (res == 1) ? INFINITY : NAN;
 }
 
-
 long double applyExponent(long double result, const char *buffer) {
-    char sign = '+';
-    int exponent = 0;
+  char sign = '+';
+  int exponent = 0;
 
-    for (char *buffPtr = (char *)buffer; *buffPtr; buffPtr++) {
-        if (*buffPtr == 'e' || *buffPtr == 'E') {
-            sign = *(buffPtr + 1);
-            exponent = s21_atoi(buffPtr + 2);
-        }
+  for (char *buffPtr = (char *)buffer; *buffPtr; buffPtr++) {
+    if (*buffPtr == 'e' || *buffPtr == 'E') {
+      sign = *(buffPtr + 1);
+      exponent = s21_atoi(buffPtr + 2);
+    }
+  }
+
+  while (exponent) {
+    if (sign == '-') {
+      result /= 10.0;
+    } else {
+      result *= 10.0;
     }
 
-    while (exponent) {
-        if (sign == '-') {
-            result /= 10.0;
-        } else {
-            result *= 10.0;
-        }
+    exponent--;
+  }
 
-        exponent--;
-    }
-
-    return result;
+  return result;
 }
 
 int includesExponent(const char *buffer) {
-    int result = 0;
+  int result = 0;
 
-    for (char *p = (char*)buffer; *p && !result; p++) {
-        if (s21_strspn(p, "eE")) {
-            result = 1;
-        }
+  for (char *p = (char *)buffer; *p && !result; p++) {
+    if (s21_strspn(p, "eE")) {
+      result = 1;
     }
+  }
 
-    return result;
+  return result;
 }
 
 long double s21_atof(const char *buffer) {
-    long double frac = 0.0;
-    char *buffPtr = (char*)buffer;
+  long double frac = 0.0;
+  char *buffPtr = (char *)buffer;
 
-    int minus_sign = (*buffPtr == '-');
+  int minus_sign = (*buffPtr == '-');
 
-    if (*buffPtr == '-' || *buffPtr == '+') {
-        buffPtr++;
-	}
+  if (*buffPtr == '-' || *buffPtr == '+') {
+    buffPtr++;
+  }
 
-    long double result = s21_atoi(buffPtr);
+  long double result = s21_atoi(buffPtr);
 
-    while (isDigit(*buffPtr))
-        buffPtr++;
+  while (isDigit(*buffPtr)) buffPtr++;
 
-    if (*buffPtr == '.') {
-        buffPtr++;
-        //! вашему вниманию танцы с бубнами с 123.000001
+  if (*buffPtr == '.') {
+    buffPtr++;
+    //! вашему вниманию танцы с бубнами с 123.000001
 
-        int trailing_zeros = s21_strspn(buffPtr, "0");
-        frac = s21_atoi(buffPtr);
-        int temp = (int)frac;
+    int trailing_zeros = s21_strspn(buffPtr, "0");
+    frac = s21_atoi(buffPtr);
+    int temp = (int)frac;
 
-        while (temp) {
-            frac /= 10.0;
-            temp /= 10;
-        }
-
-        while (trailing_zeros) {
-            frac /= 10.0;
-            trailing_zeros--;
-        }
+    while (temp) {
+      frac /= 10.0;
+      temp /= 10;
     }
 
-    result += frac;
+    while (trailing_zeros) {
+      frac /= 10.0;
+      trailing_zeros--;
+    }
+  }
 
-    return minus_sign ? -result : result;
+  result += frac;
+
+  return minus_sign ? -result : result;
+}
+
+int s21_atoi(char *str) {
+  s21_size_t len = s21_strspn(str, NUMS_STR);
+  int res = 0;
+  int state = 1;
+
+  for (s21_size_t i = 0; i < len && state; i++) {
+    if (str[i] < '0' || str[i] > '9')
+      state = 0;
+    else
+      res += (str[i] - '0') * pow(10, len - i - 1);
+  }
+
+  return res;
+}
+
+s21_size_t s21_itoa(long long num, char *str, int radix) {
+  char buff[25] = {0};
+  char nums[] = "0123456789abcdef";
+  if (num < 0) {
+    str[0] = '-';
+    num *= -1;
+  }
+  if (num == 0)
+    buff[0] = '0';
+  else
+    for (int i = 0; num != 0; i++) {
+      buff[i] = nums[num % radix];
+      num /= radix;
+    }
+
+  s21_size_t len = s21_strlen(buff);
+
+  for (s21_size_t i = 0; i < len; i++)
+    str[str[0] == '-' ? i + 1 : i] = buff[len - i - 1];
+
+  return str[0] == '-' ? len + 1 : len;
+}
+
+s21_size_t s21_utoa(unsigned long long num, char *str, int radix) {
+  char buff[25] = {0};
+  char nums[] = "0123456789abcdef";
+
+  for (int i = 0; num != 0; i++) {
+    buff[i] = nums[num % radix];
+    num /= radix;
+  }
+
+  s21_size_t len = s21_strlen(buff);
+
+  for (s21_size_t i = 0; i < len; i++) str[i] = buff[len - i - 1];
+
+  return len;
+}
+
+s21_size_t s21_ftoa(long double num, char *str, size_t precision) {
+  long double x, y;
+  s21_size_t res = 0;
+  if (num < 0) {
+    str[res++] = '-';
+    num *= -1;
+  }
+  y = modfl(num, &x);
+  char buff[25] = {0};
+
+  res += s21_itoa(x, &(str[res]), 10);
+  if (precision > 0) {
+    str[res++] = '.';
+    s21_size_t float_size = s21_itoa(roundl(y * pow(10, precision)), buff, 10);
+    if (float_size < precision) {
+      s21_memset(&(str[res]), '0', precision - float_size);
+      res += precision - float_size;
+    }
+    s21_strncpy(&(str[res]), buff, float_size);
+    res += float_size;
+  }
+
+  return res;
+}
+
+char *upper(char *str) {
+  if (!str) return s21_NULL;
+  s21_size_t len = s21_strlen(str);
+
+  for (s21_size_t i = 0; i < len; i++) {
+    if (str[i] >= 'a' && str[i] <= 'z')
+      str[i] = str[i] + 'A' - 'a';
+    else
+      str[i] = str[i];
+  }
+
+  return str;
 }
