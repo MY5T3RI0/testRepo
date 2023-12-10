@@ -48,7 +48,10 @@ void format_spec(char* str, FORMAT* form, va_list arg, int* j) {
   } else if (is_nradix(form)) {
     format_nradix(str, form, arg, j);
   } else if (form->specifier & spec_s) {
-    format_string(str, form, arg, j);
+    if (form->len & len_l)
+      format_string_long(str, form, arg, j);
+    else
+      format_string(str, form, arg, j);
   } else if (form->specifier & spec_p) {
     format_pointer(str, form, arg, j);
   } else if (form->specifier & spec_percent) {
@@ -110,8 +113,7 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   double num = va_arg(arg, double), temp = num;
   char buff[30] = {0};
 
-  notation =
-      calculate_notation(notation, (long double*)&temp, &positive_notation);
+  notation = calculate_notation(notation, &temp, &positive_notation);
   form->precision = form->is_precision ? form->precision : 6;
   int total_notation = notation * (positive_notation ? 1 : -1);
 
@@ -163,7 +165,7 @@ void format_double(char* str, FORMAT* form, va_list arg, int* j) {
   long double num = va_arg(arg, long double), temp = num;
   char buff[30] = {0};
 
-  notation = calculate_notation(notation, &temp, &positive_notation);
+  notation = calculate_notation_long(notation, &temp, &positive_notation);
   form->precision = form->is_precision ? form->precision : 6;
   int total_notation = notation * (positive_notation ? 1 : -1);
 
@@ -316,9 +318,26 @@ void format_char(char* str, FORMAT* form, va_list arg, int* j) {
 void format_string(char* str, FORMAT* form, va_list arg, int* j) {
   char* new_str = va_arg(arg, char*);
   int shift = 0;
-  if (!(form->len & len_l)) new_str = (char*)new_str;
   int precision = s21_strlen(new_str);
   if (form->is_precision && s21_strlen(new_str) > form->precision)
+    precision = form->precision;
+
+  int width = form->width - precision;
+
+  for (int i = 0; i < width && !(form->flags & flag_minus); i++)
+    str[shift++] = ' ';
+
+  for (int i = 0; i < precision; i++) str[shift++] = new_str[i];
+  for (int i = 0; i < width && (form->flags & flag_minus); i++)
+    str[shift++] = ' ';
+  (*j) += shift;
+}
+
+void format_string_long(char* str, FORMAT* form, va_list arg, int* j) {
+  wchar_t* new_str = va_arg(arg, wchar_t*);
+  int shift = 0;
+  int precision = s21_strlen_long(new_str);
+  if (form->is_precision && s21_strlen_long(new_str) > form->precision)
     precision = form->precision;
 
   int width = form->width - precision;
@@ -514,8 +533,22 @@ void set_nulls(char* str, FORMAT* form) {
 
 int g_selector(int p, int x) { return p > x && x >= -4; }
 
-int calculate_notation(int notation, long double* temp,
-                       int* positive_notation) {
+int calculate_notation(int notation, double* temp, int* positive_notation) {
+  while (*temp > 10) {
+    *temp /= 10;
+    notation++;
+  }
+  while (*temp < 1) {
+    *temp *= 10;
+    notation++;
+    *positive_notation = 0;
+  }
+
+  return notation;
+}
+
+int calculate_notation_long(int notation, long double* temp,
+                            int* positive_notation) {
   while (*temp > 10) {
     *temp /= 10;
     notation++;

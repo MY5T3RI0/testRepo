@@ -116,6 +116,7 @@ char *s21_strerror(int errnum);
 // Вычисляет длину строки str до завершающего нулевого символа, но не включая
 // его.
 s21_size_t s21_strlen(const char *str);
+s21_size_t s21_strlen_long(const wchar_t *str);
 // Находит первый символ в строке str1, соответствующий любому символу,
 // указанному в str2.
 char *s21_strpbrk(const char *str1, const char *str2);
@@ -159,13 +160,16 @@ void format_unsigned(char *str, FORMAT *form, va_list arg, int *j);
 void format_pointer(char *str, FORMAT *form, va_list arg, int *j);
 void format_char(char *str, FORMAT *form, va_list arg, int *j);
 void format_string(char *str, FORMAT *form, va_list arg, int *j);
+void format_string_long(char *str, FORMAT *form, va_list arg, int *j);
 void format_percent(char *str, int *j);
 void format_float(char *str, FORMAT *form, va_list arg, int *j);
 void format_double(char *str, FORMAT *form, va_list arg, int *j);
 char *upper(char *str);
 void set_nulls(char *str, FORMAT *form);
 int g_selector(int p, int x);
-int calculate_notation(int notation, long double *temp, int *positive_notation);
+int calculate_notation(int notation, double *temp, int *positive_notation);
+int calculate_notation_long(int notation, long double *temp,
+                            int *positive_notation);
 void calculate_precision(FORMAT *form, int total_notation, int total_precision);
 int is_bonus_point(FORMAT *form);
 

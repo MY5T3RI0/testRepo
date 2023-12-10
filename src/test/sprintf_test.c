@@ -22,9 +22,11 @@ int main() {
   //   format,
   //                      1.00004, 123.4567890, 0.036, 1234567.4567890);
 
-  char format[] = "%Lf";
-  int res1 = s21_sprintf(str1, format, 123.456L);
-  int res2 = sprintf(str2, format, 123.456L);
+  char format[] = "%s %g %ls";
+  char *hello = "Hello";
+  wchar_t *wchar = L"some words";
+  int res1 = s21_sprintf(str1, format, hello, 123456.456, wchar);
+  int res2 = sprintf(str2, format, hello, 123456.456, wchar);
 
   printf("%s\n", str1);
   printf("res = %d\n", res1);

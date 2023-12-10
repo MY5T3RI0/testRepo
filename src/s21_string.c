@@ -118,6 +118,14 @@ s21_size_t s21_strlen(const char *str) {
   return len;
 }
 
+s21_size_t s21_strlen_long(const wchar_t *str) {
+  s21_size_t len = 0;
+  for (; str[len]; len++)
+    ;
+
+  return len;
+}
+
 char *s21_strpbrk(const char *str1, const char *str2) {
   s21_size_t i = 0;
   s21_size_t len = s21_strlen(str1);
