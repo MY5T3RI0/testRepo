@@ -147,6 +147,7 @@ void get_specifier(FORMAT *form, char sym, int *i);
 void get_precision(FORMAT *form, char *format, int *i, va_list arg);
 void get_width(FORMAT *form, char *format, int *i, va_list arg);
 int s21_atoi(char *str);
+long long s21_atoll(char *str);
 s21_size_t s21_itoa(long long num, char *str, int radix);
 s21_size_t s21_utoa(unsigned long long num, char *str, int radix);
 s21_size_t s21_ftoa(long double num, char *str, s21_size_t precision);

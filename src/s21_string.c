@@ -324,8 +324,8 @@ long double s21_atof(const char *buffer) {
     //! вашему вниманию танцы с бубнами с 123.000001
 
     int trailing_zeros = s21_strspn(buffPtr, "0");
-    frac = s21_atoi(buffPtr);
-    int temp = (int)frac;
+    frac = s21_atoll(buffPtr);
+    long long temp = (long long)frac;
 
     while (temp) {
       frac /= 10.0;
@@ -344,9 +344,21 @@ long double s21_atof(const char *buffer) {
 }
 
 int s21_atoi(char *str) {
-  s21_size_t len = s21_strspn(str, NUMS_STR);
   int res = 0;
   int state = 1;
+  int sign = 1;
+
+  while (*str == ' ') str++;
+	if (*str == '-') {
+		str++;
+		sign = -1;
+	}
+
+	if (*str == '+') {
+		str++;
+	}
+
+	s21_size_t len = s21_strspn(str, NUMS_STR);
 
   for (s21_size_t i = 0; i < len && state; i++) {
     if (str[i] < '0' || str[i] > '9')
@@ -355,7 +367,36 @@ int s21_atoi(char *str) {
       res += (str[i] - '0') * pow(10, len - i - 1);
   }
 
-  return res;
+  return res * sign;
+}
+
+long long s21_atoll(char *str) {
+  long long res = 0;
+  int state = 1;
+  int sign = 1;
+
+  while (*str == ' ') str++;
+
+
+	if (*str == '-') {
+		str++;
+		sign = -1;
+	}
+
+	if (*str == '+') {
+		str++;
+	}
+
+	s21_size_t len = s21_strspn(str, NUMS_STR);
+
+  for (s21_size_t i = 0; i < len && state; i++) {
+    if (str[i] < '0' || str[i] > '9')
+      state = 0;
+    else
+      res += (str[i] - '0') * pow(10, len - i - 1);
+  }
+
+  return res * sign;
 }
 
 s21_size_t s21_itoa(long long num, char *str, int radix) {
