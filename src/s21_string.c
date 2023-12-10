@@ -349,16 +349,16 @@ int s21_atoi(char *str) {
   int sign = 1;
 
   while (*str == ' ') str++;
-	if (*str == '-') {
-		str++;
-		sign = -1;
-	}
+  if (*str == '-') {
+    str++;
+    sign = -1;
+  }
 
-	if (*str == '+') {
-		str++;
-	}
+  if (*str == '+') {
+    str++;
+  }
 
-	s21_size_t len = s21_strspn(str, NUMS_STR);
+  s21_size_t len = s21_strspn(str, NUMS_STR);
 
   for (s21_size_t i = 0; i < len && state; i++) {
     if (str[i] < '0' || str[i] > '9')
@@ -377,17 +377,16 @@ long long s21_atoll(char *str) {
 
   while (*str == ' ') str++;
 
+  if (*str == '-') {
+    str++;
+    sign = -1;
+  }
 
-	if (*str == '-') {
-		str++;
-		sign = -1;
-	}
+  if (*str == '+') {
+    str++;
+  }
 
-	if (*str == '+') {
-		str++;
-	}
-
-	s21_size_t len = s21_strspn(str, NUMS_STR);
+  s21_size_t len = s21_strspn(str, NUMS_STR);
 
   for (s21_size_t i = 0; i < len && state; i++) {
     if (str[i] < '0' || str[i] > '9')
