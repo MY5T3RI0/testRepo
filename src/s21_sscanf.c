@@ -472,7 +472,7 @@ int writeOctHexToMem(char **str, token *tok, int base) {
 
     if (tok->width != WIDTH_STAR) {
       if (tok->spec == 'p') {
-        *(int *)tok->address = (int)result;
+        *(long long *)tok->address = (long long)result;
       } else {
         unsignedConverter(tok, result * sign);
       }
