@@ -447,7 +447,10 @@ s21_size_t s21_ftoa(long double num, char *str, size_t precision) {
   y = modfl(num, &x);
   char buff[25] = {0};
 
-  res += s21_itoa(x, &(str[res]), 10);
+  if (precision == 0)
+    res += s21_itoa(roundl(num), &(str[res]), 10);
+  else
+    res += s21_itoa(x, &(str[res]), 10);
   if (precision > 0) {
     str[res++] = '.';
     s21_size_t float_size = s21_itoa(roundl(y * pow(10, precision)), buff, 10);

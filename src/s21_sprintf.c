@@ -534,11 +534,11 @@ void set_nulls(char* str, FORMAT* form) {
 int g_selector(int p, int x) { return p > x && x >= -4; }
 
 int calculate_notation(int notation, double* temp, int* positive_notation) {
-  while (*temp > 10) {
+  while ((*temp > 0 ? *temp : -*temp) > 10) {
     *temp /= 10;
     notation++;
   }
-  while (*temp < 1) {
+  while ((*temp > 0 ? *temp : -*temp) < 1) {
     *temp *= 10;
     notation++;
     *positive_notation = 0;
