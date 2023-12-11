@@ -147,7 +147,6 @@ void get_specifier(FORMAT *form, char sym, int *i);
 void get_precision(FORMAT *form, char *format, int *i, va_list arg);
 void get_width(FORMAT *form, char *format, int *i, va_list arg);
 int s21_atoi(char *str);
-long long s21_atoll(char *str);
 s21_size_t s21_itoa(long long num, char *str, int radix);
 s21_size_t s21_utoa(unsigned long long num, char *str, int radix);
 s21_size_t s21_ftoa(long double num, char *str, s21_size_t precision);
@@ -206,13 +205,13 @@ unsigned long long int s21_strntollu(const char *str, char **endptr, int basis,
 
 // sscanf support function
 int isSpace(char c);
-int isLetter(char c);
 int isDigit(char c);
 int checkEOFString(const char *str);
 int skipCharsInBuffer(char **str, token *tok);
 void skipSpaces(char **str);
 
 long double s21_strtold(const char *buffer);
+long double s21_atoll(char *str);
 // support function for s21_strtold
 long double s21_atof(const char *buffer);
 int includesExponent(const char *buffer);

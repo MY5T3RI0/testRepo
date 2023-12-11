@@ -31,10 +31,6 @@ int s21_sscanf(const char *str, const char *format, ...) {
 
 int isSpace(char c) { return (c == ' ' || c == '\n' || c == '\t'); }
 
-int isLetter(char c) {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
 int isDigit(char c) { return c >= '0' && c <= '9'; }
 
 int checkEOFString(const char *str) {
@@ -341,11 +337,7 @@ int writeFloatToMem(char **str, token *tok) {
   int errCode = _ERROR;
   int acceptCheck = 0;
 
-  if (tok->spec == 'f') {
-    acceptCheck = s21_strspn(*str, "0123456789+-");
-  } else {
-    acceptCheck = s21_strspn(*str, "0123456789eE+-NnaAifIF");
-  }
+  acceptCheck = s21_strspn(*str, ".0123456789eE+-NnaAifIF");
 
   if (acceptCheck) {
     int signCount = s21_strspn(*str, "+-");
@@ -361,13 +353,8 @@ int writeFloatToMem(char **str, token *tok) {
         (*str)++;
       }
 
-      if (tok->spec == 'f') {
-        writeAcceptToBuffer(str, ".0123456789+-", buffer, tok->width,
+	writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFn", buffer, tok->width,
                             startIndex);
-      } else {
-        writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFn", buffer, tok->width,
-                            startIndex);
-      }
 
       if (tok->widthType != WIDTH_STAR) {
         long double result = s21_strtold(buffer);

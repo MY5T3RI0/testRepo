@@ -315,7 +315,7 @@ long double s21_atof(const char *buffer) {
     buffPtr++;
   }
 
-  long double result = s21_atoi(buffPtr);
+  long double result = s21_atoll(buffPtr);
 
   while (isDigit(*buffPtr)) buffPtr++;
 
@@ -370,8 +370,8 @@ int s21_atoi(char *str) {
   return res * sign;
 }
 
-long long s21_atoll(char *str) {
-  long long res = 0;
+long double s21_atoll(char *str) {
+  long double res = 0;
   int state = 1;
   int sign = 1;
 
