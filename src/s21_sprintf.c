@@ -126,7 +126,7 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
       num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
   if (form->specifier & spec_e || form->specifier & spec_E) width -= 4;
-  if (is_bonus_point(form)) width -= 1;
+  if (is_bonus_point(form) && !s21_strchr(buff, '.')) width -= 1;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
   for (int i = 0; i < width && !(form->flags & flag_minus); i++)
@@ -146,7 +146,7 @@ void format_float(char* str, FORMAT* form, va_list arg, int* j) {
   s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
   shift += s21_strlen(buff);
 
-  if (is_bonus_point(form)) str[shift++] = '.';
+  if (is_bonus_point(form) && !s21_strchr(str, '.')) str[shift++] = '.';
 
   if (form->specifier & spec_e || form->specifier & spec_E) {
     str[shift++] = form->specifier & spec_e ? 'e' : 'E';
@@ -178,7 +178,7 @@ void format_double(char* str, FORMAT* form, va_list arg, int* j) {
       num_size > form->precision ? num_size : form->precision;
   int width = form->width - precision;
   if (form->specifier & spec_e || form->specifier & spec_E) width -= 4;
-  if (is_bonus_point(form)) width -= 1;
+  if (is_bonus_point(form) && !s21_strchr(buff, '.')) width -= 1;
   if (form->flags & flag_plus || form->flags & flag_space) width--;
 
   for (int i = 0; i < width && !(form->flags & flag_minus); i++)
@@ -198,7 +198,7 @@ void format_double(char* str, FORMAT* form, va_list arg, int* j) {
   s21_strncpy(&(str[shift]), buff, s21_strlen(buff));
   shift += s21_strlen(buff);
 
-  if (is_bonus_point(form)) str[shift++] = '.';
+  if (is_bonus_point(form) && !s21_strchr(str, '.')) str[shift++] = '.';
 
   if (form->specifier & spec_e || form->specifier & spec_E) {
     str[shift++] = form->specifier & spec_e ? 'e' : 'E';
@@ -531,7 +531,9 @@ void set_nulls(char* str, FORMAT* form) {
                form->precision > len ? form->precision - len : 0);
 }
 
-int g_selector(int p, int x) { return p > x && x >= -4; }
+int g_selector(int p, int x) {
+  return (p >= x && x >= -4);
+}
 
 int calculate_notation(int notation, double* temp, int* positive_notation) {
   while ((*temp > 0 ? *temp : -*temp) > 10) {
@@ -549,11 +551,11 @@ int calculate_notation(int notation, double* temp, int* positive_notation) {
 
 int calculate_notation_long(int notation, long double* temp,
                             int* positive_notation) {
-  while (*temp > 10) {
+  while ((*temp > 0 ? *temp : -*temp) > 10) {
     *temp /= 10;
     notation++;
   }
-  while (*temp < 1) {
+  while ((*temp > 0 ? *temp : -*temp) < 1) {
     *temp *= 10;
     notation++;
     *positive_notation = 0;
@@ -570,7 +572,9 @@ void calculate_precision(FORMAT* form, int total_notation,
     form->precision = total_precision - 1 > 0 ? total_precision - 1 : 0;
   } else {
     form->is_precision = 1;
-    form->precision = total_precision - (total_notation + 1);
+    form->precision = total_notation < total_precision
+                          ? total_precision - (total_notation + 1)
+                          : 0;
   }
 }
 
