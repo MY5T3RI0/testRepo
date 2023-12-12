@@ -275,8 +275,13 @@ long double applyExponent(long double result, const char *buffer) {
 
   for (char *buffPtr = (char *)buffer; *buffPtr; buffPtr++) {
     if (*buffPtr == 'e' || *buffPtr == 'E') {
-      sign = *(buffPtr + 1);
-      exponent = s21_atoi(buffPtr + 2);
+		if (*(buffPtr + 1) == '+' || *(buffPtr + 1) == '+') {
+			sign = *(buffPtr + 1);
+      		exponent = s21_atoi(buffPtr + 2);
+		} else {
+			exponent = s21_atoi(buffPtr + 1);
+		}
+
     }
   }
 
