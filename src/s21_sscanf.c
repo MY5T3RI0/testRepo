@@ -337,7 +337,7 @@ int writeFloatToMem(char **str, token *tok) {
   int errCode = _ERROR;
   int acceptCheck = 0;
 
-  acceptCheck = s21_strspn(*str, ".0123456789eE+-NnaAifIF");
+  acceptCheck = s21_strspn(*str, ".0123456789eE+-NnaAifIFty");
 
   if (acceptCheck) {
     int signCount = s21_strspn(*str, "+-");
@@ -353,7 +353,7 @@ int writeFloatToMem(char **str, token *tok) {
         (*str)++;
       }
 
-	writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFn", buffer, tok->width,
+	writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFnty", buffer, tok->width,
                             startIndex);
 
       if (tok->widthType != WIDTH_STAR) {
@@ -366,11 +366,7 @@ int writeFloatToMem(char **str, token *tok) {
   }
 
   if (tok->widthType != WIDTH_NUMBER) {
-    if (tok->spec == 'f') {
-      writeAcceptToBuffer(str, ".0123456789", s21_NULL, 0, 0);
-    } else {
-      writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFn", s21_NULL, 0, 0);
-    }
+      writeAcceptToBuffer(str, ".0123456789eE+-NaAifIFnty", s21_NULL, 0, 0);
   }
 
   return errCode;
