@@ -1,19 +1,19 @@
 #include "s21_string.h"
 
 void *s21_memchr(const void *str, int c, s21_size_t n) {
-	unsigned char *ptr = (unsigned char*)str;
-	void *result = s21_NULL;
+  unsigned char *ptr = (unsigned char *)str;
+  void *result = s21_NULL;
 
-	for (s21_size_t i = 0; i < n && ptr; ++i) {
-		if (*ptr == (unsigned char)c) {
-			result = ptr;
-			i = n;
-		}
+  for (s21_size_t i = 0; i < n && ptr; ++i) {
+    if (*ptr == (unsigned char)c) {
+      result = ptr;
+      i = n;
+    }
 
-		ptr++;
-	}
+    ptr++;
+  }
 
-	return result;
+  return result;
 }
 
 int s21_memcmp(const void *str1, const void *str2, s21_size_t n) {
@@ -28,8 +28,12 @@ int s21_memcmp(const void *str1, const void *str2, s21_size_t n) {
 }
 
 void *s21_memcpy(void *dest, const void *src, s21_size_t n) {
-	unsigned char *destPtr = (unsigned char *)dest;
-    unsigned char *srcPtr = (unsigned char *)src;
+  unsigned char *destPtr = (unsigned char *)dest;
+  unsigned char *srcPtr = (unsigned char *)src;
+
+  for (s21_size_t i = 0; i < n; i++) {
+    destPtr[i] = srcPtr[i];
+  }
 
     for (s21_size_t i = 0; i < n; i++) {
         destPtr[i] = srcPtr[i];
@@ -79,11 +83,11 @@ int s21_strncmp(const char *str1, const char *str2, s21_size_t n) {
 }
 
 char *s21_strncpy(char *dest, const char *src, s21_size_t n) {
-	s21_memset(dest, '\0', n);
+  s21_memset(dest, '\0', n);
 
-	for (s21_size_t i = 0; i < n && src[i]; ++i) {
-        dest[i] = src[i];
-    }
+  for (s21_size_t i = 0; i < n && src[i]; ++i) {
+    dest[i] = src[i];
+  }
 
     return dest;
 }
@@ -147,11 +151,11 @@ char *s21_strrchr(const char *str, int c) {
   void *chr = s21_NULL;
   s21_size_t len = s21_strlen(str);
 
-  for (s21_size_t i = len; i >= 0; i--) {
+  for (s21_size_t i = len; i > 0; i--) {
     if (str[i] == c) {
-		chr = (char*)str + i;
-		i = -1;
-	}
+      chr = (char *)str + i;
+      i = -1;
+    }
   }
 
   return chr;
@@ -164,20 +168,19 @@ char *s21_strstr(const char *haystack, const char *needle) {
   int notEqual = 0;
 
   if (haystack_len >= needle_len) {
-	 for (s21_size_t i = 0; i <= haystack_len - needle_len;
-             i++) {
-            int found = 1;
-            for (s21_size_t j = i, k = 0; needle[k] && !notEqual; k++, j++) {
-                if (haystack[j] != needle[k]) {
-                    found = 0;
-					notEqual = 1;
-                }
-            }
+    for (s21_size_t i = 0; i <= haystack_len - needle_len; i++) {
+      int found = 1;
+      for (s21_size_t j = i, k = 0; needle[k] && !notEqual; k++, j++) {
+        if (haystack[j] != needle[k]) {
+          found = 0;
+          notEqual = 1;
+        }
+      }
 
-            if (found) {
-                result = (char *)haystack + i;
-                i = haystack_len - needle_len + 1;
-            }
+      if (found) {
+        result = (char *)haystack + i;
+        i = haystack_len - needle_len + 1;
+      }
     }
   }
 
@@ -292,13 +295,12 @@ long double applyExponent(long double result, const char *buffer) {
 
   for (char *buffPtr = (char *)buffer; *buffPtr; buffPtr++) {
     if (*buffPtr == 'e' || *buffPtr == 'E') {
-		if (*(buffPtr + 1) == '+' || *(buffPtr + 1) == '-') {
-			sign = *(buffPtr + 1);
-      		exponent = s21_atoi(buffPtr + 2);
-		} else {
-			exponent = s21_atoi(buffPtr + 1);
-		}
-
+      if (*(buffPtr + 1) == '+' || *(buffPtr + 1) == '-') {
+        sign = *(buffPtr + 1);
+        exponent = s21_atoi(buffPtr + 2);
+      } else {
+        exponent = s21_atoi(buffPtr + 1);
+      }
     }
   }
 
@@ -423,8 +425,9 @@ long double s21_atoll(char *str) {
 s21_size_t s21_itoa(long long num, char *str, int radix) {
   char buff[25] = {0};
   char nums[] = "0123456789abcdef";
+  int is_negative = 0;
   if (num < 0) {
-    str[0] = '-';
+    is_negative = 1;
     num *= -1;
   }
   if (num == 0)
@@ -437,8 +440,9 @@ s21_size_t s21_itoa(long long num, char *str, int radix) {
 
   s21_size_t len = s21_strlen(buff);
 
-  for (s21_size_t i = 0; i < len; i++)
-    str[str[0] == '-' ? i + 1 : i] = buff[len - i - 1];
+  s21_size_t i = is_negative ? 1 : 0;
+  str[0] = '-';
+  for (; i < len; i++) str[i] = buff[len - i - 1];
 
   return str[0] == '-' ? len + 1 : len;
 }
