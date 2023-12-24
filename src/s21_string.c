@@ -1,12 +1,19 @@
 #include "s21_string.h"
 
 void *s21_memchr(const void *str, int c, s21_size_t n) {
-  const unsigned char *result = str;
-  void *chr = s21_NULL;
-  for (s21_size_t i = 0; i < n && !chr; i++)
-    if (*(result + i) == c) chr = (void *)(result + i);
+	unsigned char *ptr = (unsigned char*)str;
+	void *result = s21_NULL;
 
-  return chr;
+	for (s21_size_t i = 0; i < n && ptr; ++i) {
+		if (*ptr == (unsigned char)c) {
+			result = ptr;
+			i = n;
+		}
+
+		ptr++;
+	}
+
+	return result;
 }
 
 int s21_memcmp(const void *str1, const void *str2, s21_size_t n) {
@@ -21,14 +28,14 @@ int s21_memcmp(const void *str1, const void *str2, s21_size_t n) {
 }
 
 void *s21_memcpy(void *dest, const void *src, s21_size_t n) {
-  unsigned char *destination = dest;
-  const unsigned char *source = src;
-  s21_size_t len = s21_strlen(src) < n ? s21_strlen(src) + 1 : n;
-  for (s21_size_t i = 0; i < len; i++) {
-    destination[i] = *(source + i);
-  }
+	unsigned char *destPtr = (unsigned char *)dest;
+    unsigned char *srcPtr = (unsigned char *)src;
 
-  return dest;
+    for (s21_size_t i = 0; i < n; i++) {
+        destPtr[i] = srcPtr[i];
+    }
+
+    return dest;
 }
 
 void *s21_memset(void *str, int c, s21_size_t n) {
@@ -72,13 +79,13 @@ int s21_strncmp(const char *str1, const char *str2, s21_size_t n) {
 }
 
 char *s21_strncpy(char *dest, const char *src, s21_size_t n) {
-  s21_size_t end =
-      s21_strlen(src) > s21_strlen(dest) ? s21_strlen(src) : s21_strlen(dest);
-  s21_size_t len = end < n ? end : n;
+	s21_memset(dest, '\0', n);
 
-  for (s21_size_t i = 0; i < len; i++) dest[i] = *(src + i);
+	for (s21_size_t i = 0; i < n && src[i]; ++i) {
+        dest[i] = src[i];
+    }
 
-  return dest;
+    return dest;
 }
 
 s21_size_t s21_strcspn(const char *str1, const char *str2) {
@@ -140,8 +147,12 @@ char *s21_strrchr(const char *str, int c) {
   void *chr = s21_NULL;
   s21_size_t len = s21_strlen(str);
 
-  for (s21_size_t i = 0; i < len && !chr; i++)
-    if (*(str + len - i - 1) == c) chr = (char *)str + len - i - 1;
+  for (s21_size_t i = len; i >= 0; i--) {
+    if (str[i] == c) {
+		chr = (char*)str + i;
+		i = -1;
+	}
+  }
 
   return chr;
 }
@@ -149,22 +160,28 @@ char *s21_strrchr(const char *str, int c) {
 char *s21_strstr(const char *haystack, const char *needle) {
   s21_size_t haystack_len = s21_strlen(haystack);
   s21_size_t needle_len = s21_strlen(needle);
-  char *current = (char *)haystack;
-  char *temp = s21_NULL;
-  int is_searched = 0;
+  char *result = s21_NULL;
+  int notEqual = 0;
 
-  if (!(*needle)) is_searched = 1;
+  if (haystack_len >= needle_len) {
+	 for (s21_size_t i = 0; i <= haystack_len - needle_len;
+             i++) {
+            int found = 1;
+            for (s21_size_t j = i, k = 0; needle[k] && !notEqual; k++, j++) {
+                if (haystack[j] != needle[k]) {
+                    found = 0;
+					notEqual = 1;
+                }
+            }
 
-  for (s21_size_t i = 0; i < haystack_len && !is_searched && current; i++) {
-    temp = s21_strchr(current, needle[0]);
-    if (current == temp)
-      current++;
-    else
-      current = temp;
-    if (current) is_searched = !s21_strncmp(current, needle, needle_len);
+            if (found) {
+                result = (char *)haystack + i;
+                i = haystack_len - needle_len + 1;
+            }
+    }
   }
 
-  return is_searched ? current : s21_NULL;
+  return result;
 }
 
 char *s21_strtok(char *str, const char *delim) {
