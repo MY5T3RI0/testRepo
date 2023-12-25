@@ -35,11 +35,7 @@ void *s21_memcpy(void *dest, const void *src, s21_size_t n) {
     destPtr[i] = srcPtr[i];
   }
 
-    for (s21_size_t i = 0; i < n; i++) {
-        destPtr[i] = srcPtr[i];
-    }
-
-    return dest;
+  return dest;
 }
 
 void *s21_memset(void *str, int c, s21_size_t n) {
@@ -89,7 +85,7 @@ char *s21_strncpy(char *dest, const char *src, s21_size_t n) {
     dest[i] = src[i];
   }
 
-    return dest;
+  return dest;
 }
 
 s21_size_t s21_strcspn(const char *str1, const char *str2) {
@@ -440,9 +436,11 @@ s21_size_t s21_itoa(long long num, char *str, int radix) {
 
   s21_size_t len = s21_strlen(buff);
 
-  s21_size_t i = is_negative ? 1 : 0;
+  s21_size_t i = is_negative;
   str[0] = '-';
-  for (; i < len; i++) str[i] = buff[len - i - 1];
+  for (; i < len + is_negative; i++) {
+    str[i] = buff[len - i - 1 + is_negative];
+  }
 
   return str[0] == '-' ? len + 1 : len;
 }

@@ -156,6 +156,7 @@ int is_float(FORMAT *form);
 int is_nradix(FORMAT *form);
 void format_nradix(char *str, FORMAT *form, va_list arg, int *j);
 void format_decimal(char *str, FORMAT *form, va_list arg, int *j);
+void format_long(char *str, FORMAT *form, va_list arg, int *j);
 void format_unsigned(char *str, FORMAT *form, va_list arg, int *j);
 void format_pointer(char *str, FORMAT *form, va_list arg, int *j);
 void format_char(char *str, FORMAT *form, va_list arg, int *j);
