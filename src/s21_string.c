@@ -166,10 +166,11 @@ char *s21_strstr(const char *haystack, const char *needle) {
   if (haystack_len >= needle_len) {
     for (s21_size_t i = 0; i <= haystack_len - needle_len; i++) {
       int found = 1;
+	  notEqual = 0;
       for (s21_size_t j = i, k = 0; needle[k] && !notEqual; k++, j++) {
         if (haystack[j] != needle[k]) {
           found = 0;
-          notEqual = 1;
+    	  notEqual = 1;
         }
       }
 
