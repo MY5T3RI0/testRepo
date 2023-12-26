@@ -146,11 +146,12 @@ char *s21_strpbrk(const char *str1, const char *str2) {
 char *s21_strrchr(const char *str, int c) {
   void *chr = s21_NULL;
   s21_size_t len = s21_strlen(str);
+  int isEnd = 0;
 
-  for (s21_size_t i = len; i > 0; i--) {
+  for (s21_size_t i = len; i > 0 && !isEnd; i--) {
     if (str[i] == c) {
       chr = (char *)str + i;
-      i = -1;
+      isEnd = 1;
     }
   }
 
